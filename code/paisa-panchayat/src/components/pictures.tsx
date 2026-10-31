@@ -1,15 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { TAppState, TGoalView } from "@/contract/schemas";
 
 type Row = TAppState["rows"][number];
 
-/** Colour follows the goal, never its rank. The order passes the colour-vision validator. */
-const GOAL_COLORS = ["#1971C2", "#E8590C", "#00A08A", "#7048E8", "#D6336C"];
-
-export function goalColor(goals: { id: string }[], id: string): string {
-  const i = goals.findIndex((g) => g.id === id);
-  return GOAL_COLORS[(i < 0 ? 0 : i) % GOAL_COLORS.length];
+/** One accent throughout, as the design system asks. A goal's icon and name carry its identity, never its colour. */
+export function goalColor(_goals: { id: string }[], _id: string): string {
+  return "var(--accent)";
 }
 
 export function goalEmoji(name: string, type?: TGoalView["type"]): string {
@@ -51,9 +49,9 @@ export function rowEmoji(row: Pick<Row, "kind" | "label" | "category">): string 
   return BRANDS.find(([re]) => re.test(label))?.[1] ?? categoryEmoji(row.category);
 }
 
-export function Avatar({ emoji, size = 52, tint }: { emoji: string; size?: number; tint?: string }) {
+export function Avatar({ emoji, size = 44, tint }: { emoji: string; size?: number; tint?: string }) {
   return (
-    <span className="avatar" aria-hidden="true" style={{ width: size, height: size, fontSize: size * 0.52, background: tint ? `${tint}1f` : undefined }}>
+    <span className={`avatar ${tint ? "avatar-tint" : ""}`} aria-hidden="true" style={{ width: size, height: size, fontSize: size * 0.5 }}>
       {emoji}
     </span>
   );
@@ -63,23 +61,29 @@ export function Initial({ name }: { name: string }) {
   return <span className="initial" aria-hidden="true">{name.charAt(0).toUpperCase()}</span>;
 }
 
-/** A circular progress ring around a big icon. The label always says the number too, so colour is never the only signal. */
-export function Ring({ percent, color, emoji, size = 120, stroke = 11, center, label }: {
+/** A progress ring around a big icon. It fills when it appears and glides when the figure changes. The label always carries the number, so colour is never the only signal. */
+export function Ring({ percent, color = "var(--accent)", emoji, size = 120, stroke = 11, center, label, track }: {
   percent: number;
-  color: string;
+  color?: string;
   emoji?: string;
   size?: number;
   stroke?: number;
   center?: React.ReactNode;
   label: string;
+  track?: string;
 }) {
   const r = (size - stroke) / 2;
   const circumference = 2 * Math.PI * r;
-  const shown = Math.max(0, Math.min(100, percent));
+  const target = Math.max(0, Math.min(100, percent));
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setShown(target));
+    return () => cancelAnimationFrame(frame);
+  }, [target]);
   return (
     <span className="progress-ring" role="img" aria-label={label} style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--track)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track ?? "var(--tint)"} strokeWidth={stroke} />
         <circle
           className="ring-fill"
           cx={size / 2}
@@ -94,7 +98,7 @@ export function Ring({ percent, color, emoji, size = 120, stroke = 11, center, l
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
         />
       </svg>
-      <span className="ring-center" style={{ fontSize: size * 0.34 }}>{center ?? emoji}</span>
+      <span className="ring-center" style={{ fontSize: size * 0.36 }}>{center ?? emoji}</span>
     </span>
   );
 }

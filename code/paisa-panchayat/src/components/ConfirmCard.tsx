@@ -8,9 +8,9 @@ import { Avatar, categoryEmoji, rowEmoji } from "./pictures";
 import { Badge, Empty, SourceBadge, Working } from "./ui";
 
 const STATUS = {
-  ok: { tone: "ok", label: "✅ Looks right" },
-  ask: { tone: "ask", label: "👀 Check this" },
-  block: { tone: "block", label: "✋ Fix this" },
+  ok: { tone: "ok", label: "Looks right" },
+  ask: { tone: "ask", label: "Check this" },
+  block: { tone: "block", label: "Fix this" },
 } as const;
 
 function itemEmoji(item: TCheckedItem): string {
@@ -68,7 +68,7 @@ export function ConfirmCard({ reply, saving, onConfirm, onDiscard }: {
   if (saving) {
     return (
       <Working
-        title="Saving to the khata"
+        title="Saving to your ledger"
         quote={reply.raw_text}
         detail="If this is a heavy expense, your goals are being called in."
       />
@@ -79,10 +79,10 @@ export function ConfirmCard({ reply, saving, onConfirm, onDiscard }: {
   const blocked = items.some((i) => i.status === "block");
 
   return (
-    <section className="confirm" aria-label="Confirm entries">
+    <section className="confirm view" aria-label="Confirm entries">
       <header className="confirm-head">
         <div>
-          <h2 className="screen-title">Got it right?</h2>
+          <h1 className="page-title">Got it right?</h1>
           <p className="muted confirm-sent">You said: {reply.raw_text}</p>
         </div>
         <SourceBadge source={reply.llm_source} />
@@ -98,7 +98,7 @@ export function ConfirmCard({ reply, saving, onConfirm, onDiscard }: {
             const about = detail(item);
             return (
               <li key={`${item.source_quote}-${i}`} className={`confirm-row is-${item.status}`}>
-                <Avatar emoji={itemEmoji(item)} size={56} />
+                <Avatar emoji={itemEmoji(item)} size={52} />
                 <div className="confirm-source">
                   <p className="confirm-quote">“{item.source_quote}”</p>
                   <p className="confirm-meta">
@@ -121,7 +121,7 @@ export function ConfirmCard({ reply, saving, onConfirm, onDiscard }: {
                 <AmountField item={item} onChange={(p) => update(i, editAmount(item, p))} />
                 <button
                   type="button"
-                  className="btn-link confirm-remove"
+                  className="text-link confirm-remove"
                   aria-label={`Remove ${item.source_quote}`}
                   onClick={() => setItems((all) => all.filter((_, j) => j !== i))}
                 >

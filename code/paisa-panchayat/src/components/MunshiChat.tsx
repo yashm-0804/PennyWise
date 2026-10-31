@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { TAppState, TMunshiResponse } from "@/contract/schemas";
 import { dateTime, humanize, inr, shortUrl } from "./format";
-import { Avatar, categoryEmoji, goalColor, Ring } from "./pictures";
+import { CloseIcon, SendIcon } from "./icons";
+import { useTypingPulse, Wave } from "./motion";
+import { Avatar, categoryEmoji, Ring } from "./pictures";
 import { Badge, Elapsed, SourceBadge } from "./ui";
 
 export type MunshiEntry = { id: number; question: string; res: TMunshiResponse };
@@ -21,12 +23,11 @@ function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState }) {
   const goal = res.price ? state.goals.find((g) => g.id === res.price!.goalId) : undefined;
   const planned = goal && goal.target > 0 ? Math.round((goal.earmarked / goal.target) * 1000) / 10 : null;
   const today = goal && res.price ? Math.round((goal.earmarked / res.price.price) * 1000) / 10 : null;
-  const color = goal ? goalColor(state.goals, goal.id) : "#1971C2";
   return (
     <article className="chat-turn">
       <p className="chat-me">{question}</p>
       <div className="chat-munshi">
-        <Avatar emoji={refused ? "🙅" : "📒"} size={40} />
+        <Avatar emoji={refused ? "🙅" : "🐞"} size={40} />
         <div className="chat-bubble">
           <div className="chat-tags">
             {refused ? <Badge tone="block">Won&apos;t name a security</Badge> : null}
@@ -36,9 +37,9 @@ function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState }) {
           {goal && res.price && planned !== null && today !== null ? (
             <>
               <div className="ring-pair">
-                <figure><Ring percent={planned} color={color} size={96} stroke={10} center={<span className="ring-small">{planned}%</span>} label={`${planned}% of the planned price`} /><figcaption>Planned {inr(goal.target)}</figcaption></figure>
+                <figure><Ring percent={planned} size={96} stroke={10} track="var(--canvas)" center={<span className="ring-small">{planned}%</span>} label={`${planned}% of the planned price`} /><figcaption>Planned {inr(goal.target)}</figcaption></figure>
                 <span className="ring-arrow" aria-hidden="true">→</span>
-                <figure><Ring percent={today} color={color} size={96} stroke={10} center={<span className="ring-small">{today}%</span>} label={`${today}% of today's price`} /><figcaption>Today {inr(res.price.price)}</figcaption></figure>
+                <figure><Ring percent={today} size={96} stroke={10} track="var(--canvas)" center={<span className="ring-small">{today}%</span>} label={`${today}% of today's price`} /><figcaption>Today {inr(res.price.price)}</figcaption></figure>
               </div>
               <p className="muted small">
                 {res.price.label} · {res.price.variant} · {dateTime(res.price.checkedAt)}
@@ -63,7 +64,7 @@ function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState }) {
   );
 }
 
-/** Munshi's chat window. It floats over any screen, with its own text box for Wispr Flow to type into. */
+/** Buggy's chat window. (Munshi is its old name, still used inside the code.) It floats over any screen, with its own text box for Wispr Flow to type into. */
 export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClose, onUndoRule, inputRef }: {
   state: TAppState;
   entries: MunshiEntry[];
@@ -76,6 +77,7 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
   inputRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   const [text, setText] = useState("");
+  const [typing, pingTyping] = useTypingPulse();
   const end = useRef<HTMLDivElement>(null);
   const chronological = [...entries].reverse();
 
@@ -96,15 +98,15 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
 
   return (
     <div className="chat-layer">
-      <button type="button" className="chat-scrim" aria-label="Close Munshi" tabIndex={-1} onClick={onClose} />
-      <section className="chat-window" role="dialog" aria-label="Chat with Munshi">
+      <button type="button" className="chat-scrim" aria-label="Close Buggy" tabIndex={-1} onClick={onClose} />
+      <section className="chat-window" role="dialog" aria-label="Chat with Buggy">
         <header className="chat-head">
-          <Avatar emoji="📒" size={46} />
+          <Avatar emoji="🐞" size={44} tint="goal" />
           <div className="chat-head-text">
-            <b>Munshi</b>
-            <span className="muted small">Ask about spending, lending, EMIs, cash or goals</span>
+            <b>Buggy</b>
+            <span className="small">Ask about spending, lending, EMIs, cash or goals</span>
           </div>
-          <button type="button" className="chat-close" aria-label="Close" onClick={onClose}>✕</button>
+          <button type="button" className="chat-close" aria-label="Close" onClick={onClose}><CloseIcon /></button>
         </header>
 
         <div className="chat-scroll">
@@ -113,7 +115,7 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
           {working ? (
             <article className="chat-turn" role="status" aria-live="polite">
               <p className="chat-me">{working}</p>
-              <div className="chat-munshi"><Avatar emoji="📒" size={40} /><div className="chat-bubble"><span className="typing"><i /><i /><i /></span> <Elapsed /></div></div>
+              <div className="chat-munshi"><Avatar emoji="🐞" size={40} tint="goal" /><div className="chat-bubble"><span className="typing"><i /><i /><i /></span> <Elapsed /></div></div>
             </article>
           ) : null}
           <div className="chips">
@@ -145,16 +147,16 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
         </div>
 
         <form className="bar chat-bar" onSubmit={(e) => { e.preventDefault(); send(); }}>
-          <span className="bar-mic" aria-hidden="true">🎙️</span>
-          <label className="visually-hidden" htmlFor="munshi-input">Ask Munshi</label>
+          <Wave active={typing} />
+          <label className="visually-hidden" htmlFor="munshi-input">Ask Buggy</label>
           <textarea
             id="munshi-input"
             ref={inputRef}
             className="bar-input"
             rows={1}
             value={text}
-            placeholder="Ask Munshi anything…"
-            onChange={(e) => setText(e.target.value)}
+            placeholder="Ask Buggy anything…"
+            onChange={(e) => { setText(e.target.value); pingTyping(); }}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
                 e.preventDefault();
@@ -162,7 +164,7 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
               }
             }}
           />
-          <button type="submit" className="bar-send" aria-label="Ask" disabled={!text.trim() || busy}>{busy ? "…" : "➤"}</button>
+          <button type="submit" className="bar-send" aria-label="Ask" disabled={!text.trim() || busy}>{busy ? "…" : <SendIcon />}</button>
         </form>
       </section>
     </div>

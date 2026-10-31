@@ -1,22 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Baloo_2, Mukta } from "next/font/google";
+import { Mona_Sans, Mukta } from "next/font/google";
 import "./globals.css";
 
-// Both faces cover Latin and Devanagari, so Hinglish in either script stays in one voice.
-const display = Baloo_2({ weight: ["600", "700", "800"], subsets: ["latin", "devanagari"], variable: "--font-display" });
-const body = Mukta({ weight: ["400", "500", "700", "800"], subsets: ["latin", "devanagari"], variable: "--font-body" });
+// Mona Sans is the design system's face. Mukta carries Devanagari, which Mona Sans lacks, so Hinglish in either script stays readable.
+const mona = Mona_Sans({ subsets: ["latin", "latin-ext"], axes: ["wdth"], variable: "--font-mona" });
+const devanagari = Mukta({ weight: ["400", "500", "700"], subsets: ["devanagari"], variable: "--font-deva" });
 
 export const metadata: Metadata = {
-  title: "Paisa Panchayat",
+  title: "PennyWise",
   description: "Talk through your money. Your goals argue, you make the call.",
   icons: { icon: "/icon.svg" },
 };
 
-export const viewport: Viewport = { themeColor: "#FFF8EE", colorScheme: "light" };
+export const viewport: Viewport = { themeColor: "#0D0C22", colorScheme: "light", viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${mona.variable} ${devanagari.variable}`}>
       <body>{children}</body>
     </html>
   );

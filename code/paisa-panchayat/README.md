@@ -1,8 +1,12 @@
-# Paisa Panchayat
+# PennyWise
 
 A money ledger you feed by talking. When a big expense threatens your savings goals, the goals argue over how to absorb it, and you make the final call by voice.
 
 Built for the Agentic AI Hackathon by Product Space, in collaboration with Wispr Flow (problem 04, personal finance coach with a living money model). It was built by dictating prompts, specs and fixes with Wispr Flow into Claude Code.
+
+## Mobile app
+
+These screens are the Android and iOS app, previewed on the web at `/phone` in a phone frame. Native builds don't exist yet. The website has its own separate frontend.
 
 ## How voice works
 
@@ -10,9 +14,10 @@ The app has no speech code. [Wispr Flow](https://wisprflow.ai) types into a plai
 
 ## What it does
 
-- **Khata:** spending, income, cash, money lent or borrowed, and EMIs, dictated or imported. A cash withdrawal is a transfer, so ₹10,000 withdrawn and paid out counts once. Nothing is saved until you confirm it.
+- **Ledger:** spending, income, cash, money lent or borrowed, and EMIs, dictated or imported. A cash withdrawal is a transfer, so ₹10,000 withdrawn and paid out counts once. Nothing you dictate is saved until you confirm it; imports are saved straight away, and you can undo any row.
 - **Panchayat:** a heavy expense convenes the goals it affects. Code finds up to 3 plans, each goal argues in its own Gemini call, and your spoken ruling changes the dates. Rulings can carry conditions, and they're remembered as precedent.
-- **Munshi:** answers questions on goal progress, what a person owes you and month spend. It re-bases an iPhone goal on Apple India's list price, and it won't name securities.
+- **Buggy:** a chat assistant on every screen. Ask about spending, lending, borrowing, EMIs, cash or goals, and Gemini answers from your file; a reply using a figure that isn't in the file is rejected. It re-bases an iPhone goal on Apple India's list price, and it won't name securities.
+- **Home figures explain themselves:** hover or press and hold any number on Home to see why it's that value.
 - **Imports and alerts:** paste SMS, upload CSV or PDF. Corrections become visible rules. "Import next month" shows recurring-payment alerts, drift nudges and a monthly review.
 
 ## Run it
@@ -26,7 +31,7 @@ npm run seed
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000/phone.
 
 This starts in fake AI mode with no API key, and replies show a "Test reply" badge. For real AI, add a [Gemini API key](https://aistudio.google.com/apikey) as `GEMINI_API_KEY` in `.env.local` and set `LLM_MODE=real`. Keep the key out of git; `.env.local` is ignored.
 
@@ -35,7 +40,7 @@ Try saying these in the text box:
 1. `Laptop died, new one is 70 thousand, need it this month`, then confirm, then rule with `Goa moves to June, and if the bonus is under 50 thousand, July`
 2. `ATM se 10 hazaar nikale, 5 hazaar plumber ko, Rohit ko 2000 udhar diye, EMI bhi kat gayi 8400`
 3. `Mera iPhone wala plan kitna pahuncha, kitna percent bacha hai, aur price badha kya`
-4. `Rahul ko jo jaata hai woh rent hai`, then "Import next month (simulated)" under Notices & Sabha
+4. `Rahul ko jo jaata hai woh rent hai`, then "Import next month" under Alerts
 5. `kaunsa mutual fund lun`
 
 To test imports, use the files in `seed/samples/` (`statement-locked.pdf` has the password `demo1234`).

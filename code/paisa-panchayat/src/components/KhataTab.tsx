@@ -3,14 +3,21 @@
 import { useState } from "react";
 import type { TAppState } from "@/contract/schemas";
 import { humanize, inr, month, shortDate } from "./format";
-import { Avatar, goalColor, goalEmoji, Initial, Ring, rowEmoji } from "./pictures";
+import { Money } from "./motion";
+import { Avatar, goalEmoji, Initial, Ring, rowEmoji } from "./pictures";
 import { cashReason, emiReason, fixedReason, goalReason, leftReason, oweReason, owedReason, ringReason, rowReason, safetyReason, spareReason, spentReason } from "./reasons";
 import { Badge, Empty } from "./ui";
 import { Why } from "./Why";
 
 type Row = TAppState["rows"][number];
+type Filter = "all" | "spent" | "other";
 
 const FIRST_ROWS = 8;
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "spent", label: "Spending" },
+  { id: "other", label: "Cash & people" },
+];
 
 export const SUGGESTIONS = [
   { emoji: "🍔", text: "Swiggy pe 450 gaye" },
@@ -34,17 +41,18 @@ const SOURCE_LABEL: Record<Row["source"], string> = {
   dictation: "You said this", sms: "From SMS", csv: "From CSV", pdf: "From PDF", seed: "Sample data", simulated: "Simulated month",
 };
 
-function Activity({ row, fresh, busy, onUndo, onTreatment }: {
+function Activity({ row, fresh, busy, index, onUndo, onTreatment }: {
   row: Row;
   fresh: boolean;
   busy: boolean;
+  index: number;
   onUndo: (eventId: string) => void;
   onTreatment: (eventId: string, t: "transfer" | "spend") => void;
 }) {
   const [open, setOpen] = useState(false);
   const quiet = !row.countsAsSpend || row.reversed;
   return (
-    <li className={`act ${fresh ? "is-fresh" : ""} ${row.reversed ? "is-reversed" : ""}`}>
+    <li className={`act ${open ? "is-open" : ""} ${fresh ? "is-fresh" : ""} ${row.reversed ? "is-reversed" : ""}`} style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}>
       <div className="act-head">
         <button type="button" className="act-open" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
           <Avatar emoji={rowEmoji(row)} />
@@ -89,7 +97,10 @@ export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest
   resetControl: React.ReactNode;
 }) {
   const [showAll, setShowAll] = useState(false);
-  const rows = [...state.rows].sort((a, b) => b.date.localeCompare(a.date));
+  const [filter, setFilter] = useState<Filter>("all");
+  const rows = [...state.rows]
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .filter((r) => filter === "all" || (filter === "spent" ? r.countsAsSpend : !r.countsAsSpend));
   const shown = showAll ? rows : rows.slice(0, FIRST_ROWS);
   const people = state.people.filter((p) => p.owesMe !== 0 || p.iOwe !== 0);
   const p = state.profile;
@@ -98,108 +109,119 @@ export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest
 
   return (
     <div className="home">
-      <section className="hero-card" aria-label={`Money left in ${month(state.simMonth)}`}>
-        <Why reason={ringReason(state)} className="why-plain">
-          <Ring
-            percent={leftPct}
-            color={left < 0 ? "#C92A2A" : "#00A08A"}
-            size={132}
-            stroke={13}
-            center={<span className="hero-ring-pct">{Math.round(leftPct)}%</span>}
-            label={`${Math.round(leftPct)}% of this month's income is left`}
-          />
-        </Why>
-        <div className="hero-text">
-          <p className="hero-kicker">{left < 0 ? "Over" : "Left"} in {month(state.simMonth)}</p>
-          <p className="hero-amount"><Why reason={leftReason(state)}>{inr(left)}</Why></p>
-          <p className="hero-sub"><Why reason={spentReason(state)}>Spent {inr(p.monthSpend)} of {inr(p.monthlyIncome)}</Why></p>
+      <section className="band band-ink" aria-label={`Money ${left < 0 ? "over" : "left"} in ${month(state.simMonth)}`}>
+        <div className="band-inner hero">
+          <div className="hero-top">
+            <div className="hero-text">
+              <p className="caption hero-kicker">{left < 0 ? "Over" : "Left"} in {month(state.simMonth)}</p>
+              <p className={`hero-amount ${left < 0 ? "is-over" : ""}`}><Why reason={leftReason(state)}><Money value={left} fromZero /></Why></p>
+              <p className="hero-sub"><Why reason={spentReason(state)}>Spent {inr(p.monthSpend)} of {inr(p.monthlyIncome)}</Why></p>
+            </div>
+            <Why reason={ringReason(state)} className="why-plain">
+              <Ring
+                percent={leftPct}
+                size={104}
+                stroke={10}
+                track="var(--accent-5)"
+                center={<span className="hero-ring-pct">{Math.round(leftPct)}%</span>}
+                label={`${Math.round(leftPct)}% of this month's income is left`}
+              />
+            </Why>
+          </div>
+          <ul className="tiles" aria-label="Your money profile">
+            <li className="tile"><span className="tile-icon" aria-hidden="true">🏠</span><span className="tile-label">Fixed costs</span><Why reason={fixedReason(state)}><b><Money value={p.fixedCosts} /></b></Why></li>
+            <li className="tile"><span className="tile-icon" aria-hidden="true">🛟</span><span className="tile-label">Safety fund</span><Why reason={safetyReason(state)}><b><Money value={p.emergencyFund} /></b></Why></li>
+            <li className="tile"><span className="tile-icon" aria-hidden="true">🌱</span><span className="tile-label">Spare a month</span><Why reason={spareReason(state)}><b><Money value={p.monthlySurplus} /></b></Why></li>
+          </ul>
         </div>
       </section>
 
-      <ul className="tiles" aria-label="Your money profile">
-        <li className="tile"><Avatar emoji="🏠" size={46} /><span className="tile-label">Fixed costs</span><Why reason={fixedReason(state)}><b>{inr(p.fixedCosts)}</b></Why></li>
-        <li className="tile"><Avatar emoji="🛟" size={46} /><span className="tile-label">Safety fund</span><Why reason={safetyReason(state)}><b>{inr(p.emergencyFund)}</b></Why></li>
-        <li className="tile"><Avatar emoji="🌱" size={46} /><span className="tile-label">Spare a month</span><Why reason={spareReason(state)}><b>{inr(p.monthlySurplus)}</b></Why></li>
-      </ul>
+      <div className="view">
+        <section aria-label="Goals">
+          <div className="row-head"><h2>Your goals</h2><button type="button" className="text-link" onClick={onGoals}>See all</button></div>
+          <div className="goal-strip">
+            {state.goals.map((g, i) => {
+              const pct = g.target > 0 ? (g.earmarked / g.target) * 100 : 0;
+              return (
+                <div key={g.id} className="goal-chip" style={{ animationDelay: `${i * 70}ms` }}>
+                  <button type="button" className="goal-chip-open" onClick={onGoals}>
+                    <Ring percent={pct} emoji={goalEmoji(g.name, g.type)} size={84} stroke={8} track="var(--canvas)" label={`${g.name}: ${Math.round(pct)}% saved`} />
+                    <b>{g.name}</b>
+                  </button>
+                  <Why reason={goalReason(g)}><span className="goal-chip-num">{Math.round(pct)}% · {month(g.projectedMonth)}</span></Why>
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-      <section aria-label="Goals">
-        <div className="row-head"><h2>Your goals</h2><button type="button" className="btn-link" onClick={onGoals}>See all</button></div>
-        <div className="goal-strip">
-          {state.goals.map((g) => {
-            const pct = g.target > 0 ? (g.earmarked / g.target) * 100 : 0;
-            return (
-              <div key={g.id} className="goal-chip">
-                <button type="button" className="goal-chip-open" onClick={onGoals}>
-                  <Ring percent={pct} color={goalColor(state.goals, g.id)} emoji={goalEmoji(g.name, g.type)} size={84} stroke={8} label={`${g.name}: ${Math.round(pct)}% saved`} />
-                  <b>{g.name}</b>
-                </button>
-                <Why reason={goalReason(g)} className="muted"><span className="goal-chip-num">{Math.round(pct)}% · {month(g.projectedMonth)}</span></Why>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+        <section aria-label="Try saying">
+          <div className="row-head"><h2>Try saying</h2></div>
+          <div className="chips chips-scroll">
+            {SUGGESTIONS.map((s) => (
+              <button type="button" key={s.text} className="chip" onClick={() => onSuggest(s.text)}><span aria-hidden="true">{s.emoji}</span> {s.text}</button>
+            ))}
+          </div>
+        </section>
 
-      <section aria-label="Try saying">
-        <div className="row-head"><h2>Try saying</h2></div>
-        <div className="chips">
-          {SUGGESTIONS.map((s) => (
-            <button type="button" key={s.text} className="chip" onClick={() => onSuggest(s.text)}><span aria-hidden="true">{s.emoji}</span> {s.text}</button>
-          ))}
-        </div>
-      </section>
-
-      <section aria-label="Cash and people">
-        <div className="row-head"><h2>Cash and people</h2></div>
-        <ul className="people">
-          <li className="person">
-            <Avatar emoji="💵" size={46} />
-            <span className="act-main"><b>Cash in hand</b><span className="act-sub">{state.cash.unexplained > 0 ? `${inr(state.cash.unexplained)} not explained yet` : "All explained"}</span></span>
-            <Why reason={cashReason(state)} className="act-amount">{inr(state.cash.balance)}</Why>
-          </li>
-          {people.flatMap((x) => [
-            x.owesMe > 0 ? (
-              <li key={`${x.person}-in`} className="person">
-                <Initial name={x.person} />
-                <span className="act-main"><b>{x.person}</b><span className="act-sub">owes you</span></span>
-                <Why reason={owedReason(x.person, state)} className="act-amount is-good">{inr(x.owesMe)}</Why>
-              </li>
-            ) : null,
-            x.iOwe > 0 ? (
-              <li key={`${x.person}-out`} className="person">
-                <Initial name={x.person} />
-                <span className="act-main"><b>{x.person}</b><span className="act-sub">you owe</span></span>
-                <Why reason={oweReason(x.person)} className="act-amount">{inr(x.iOwe)}</Why>
-              </li>
-            ) : null,
-          ])}
-          {state.emis.map((e) => (
-            <li key={e.name} className="person">
-              <Avatar emoji="📅" size={46} />
-              <span className="act-main"><b>{e.name}</b><span className="act-sub">{e.instalmentsLeft} EMIs left</span></span>
-              <Why reason={emiReason(e)} className="act-amount">{inr(e.monthly)}</Why>
+        <section aria-label="Cash and people">
+          <div className="row-head"><h2>Cash and people</h2></div>
+          <ul className="people">
+            <li className="person">
+              <Avatar emoji="💵" />
+              <span className="act-main"><b>Cash in hand</b><span className="act-sub">{state.cash.unexplained > 0 ? `${inr(state.cash.unexplained)} not explained yet` : "All explained"}</span></span>
+              <Why reason={cashReason(state)} className="act-amount"><Money value={state.cash.balance} /></Why>
             </li>
-          ))}
-        </ul>
-      </section>
-
-      <section aria-label="Recent money">
-        <div className="row-head"><h2>Recent money</h2><span className="muted small">Hover or press a number to see why</span></div>
-        {rows.length === 0 ? (
-          <Empty title="Nothing here yet">Say what happened: “ATM se 10 hazaar nikale.”</Empty>
-        ) : (
-          <ul className="acts">
-            {shown.map((r) => (
-              <Activity key={r.eventId} row={r} fresh={freshIds.includes(r.eventId)} busy={busy} onUndo={onUndo} onTreatment={onTreatment} />
+            {people.flatMap((x) => [
+              x.owesMe > 0 ? (
+                <li key={`${x.person}-in`} className="person">
+                  <Initial name={x.person} />
+                  <span className="act-main"><b>{x.person}</b><span className="act-sub">owes you</span></span>
+                  <Why reason={owedReason(x.person, state)} className="act-amount">{inr(x.owesMe)}</Why>
+                </li>
+              ) : null,
+              x.iOwe > 0 ? (
+                <li key={`${x.person}-out`} className="person">
+                  <Initial name={x.person} />
+                  <span className="act-main"><b>{x.person}</b><span className="act-sub">you owe</span></span>
+                  <Why reason={oweReason(x.person)} className="act-amount">{inr(x.iOwe)}</Why>
+                </li>
+              ) : null,
+            ])}
+            {state.emis.map((e) => (
+              <li key={e.name} className="person">
+                <Avatar emoji="📅" />
+                <span className="act-main"><b>{e.name}</b><span className="act-sub">{e.instalmentsLeft} EMIs left</span></span>
+                <Why reason={emiReason(e)} className="act-amount">{inr(e.monthly)}</Why>
+              </li>
             ))}
           </ul>
-        )}
-        {rows.length > FIRST_ROWS ? (
-          <button type="button" className="btn btn-quiet btn-wide" onClick={() => setShowAll((v) => !v)}>{showAll ? "Show less" : `Show all ${rows.length}`}</button>
-        ) : null}
-      </section>
+        </section>
 
-      <p className="home-foot">{resetControl}</p>
+        <section aria-label="Your ledger">
+          <div className="row-head"><h2>Your ledger</h2></div>
+          <div className="filters" role="group" aria-label="Show">
+            {FILTERS.map((f) => (
+              <button type="button" key={f.id} className="filter" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>{f.label}</button>
+            ))}
+          </div>
+          <p className="muted hint-line">Press and hold a number to see why. Tap a row for details.</p>
+          {rows.length === 0 ? (
+            <Empty title="Your ledger is empty">Say what happened: “ATM se 10 hazaar nikale.”</Empty>
+          ) : (
+            <ul className="acts" key={filter}>
+              {shown.map((r, i) => (
+                <Activity key={r.eventId} row={r} index={i} fresh={freshIds.includes(r.eventId)} busy={busy} onUndo={onUndo} onTreatment={onTreatment} />
+              ))}
+            </ul>
+          )}
+          {rows.length > FIRST_ROWS ? (
+            <button type="button" className="btn btn-quiet btn-wide" onClick={() => setShowAll((v) => !v)}>{showAll ? "Show less" : `Show all ${rows.length}`}</button>
+          ) : null}
+        </section>
+
+        <p className="home-foot">{resetControl}</p>
+      </div>
     </div>
   );
 }

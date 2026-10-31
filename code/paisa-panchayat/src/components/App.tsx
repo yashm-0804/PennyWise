@@ -5,6 +5,8 @@ import type {
   TAppState, TCheckedItem, TDictateResponse, TImportResponse, TMunshiResponse, TNextMonthResponse, TPanchayat, TPriceCheck, TRulingResponse,
 } from "@/contract/schemas";
 import { ApiError, fileToBase64, getState, post } from "./api";
+import { BellIcon, ChatIcon, GoalIcon, HomeIcon, PanchayatIcon, RulingIcon, SendIcon } from "./icons";
+import { useTypingPulse, Wave } from "./motion";
 import { ConfirmCard } from "./ConfirmCard";
 import { looksLikeQuestion } from "@/lib/question";
 import { newEventIds, simulatedMonths, stepForRoute } from "./flow";
@@ -16,11 +18,11 @@ import { PanchayatConvening, PanchayatScreen, type OpenPanchayat } from "./Panch
 import { Badge, Empty, ErrorBand, Working } from "./ui";
 
 type Tab = "khata" | "goals" | "panchayat" | "notices";
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: "khata", label: "Home", icon: "🏠" },
-  { id: "goals", label: "Goals", icon: "🎯" },
-  { id: "panchayat", label: "Panchayat", icon: "⚖️" },
-  { id: "notices", label: "Alerts", icon: "🔔" },
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "khata", label: "Home", icon: <HomeIcon /> },
+  { id: "goals", label: "Goals", icon: <GoalIcon /> },
+  { id: "panchayat", label: "Panchayat", icon: <PanchayatIcon /> },
+  { id: "notices", label: "Alerts", icon: <BellIcon /> },
 ];
 
 type Busy =
@@ -58,6 +60,7 @@ export function App() {
   const [panchayat, setPanchayat] = useState<OpenPanchayat | null>(null);
   const [munshi, setMunshi] = useState<MunshiEntry[]>([]);
   const [munshiOpen, setMunshiOpen] = useState(false);
+  const [typing, pingTyping] = useTypingPulse();
   const [saved, setSaved] = useState<{ count: number; ids: string[] } | null>(null);
   const [freshIds, setFreshIds] = useState<string[]>([]);
   const [prices, setPrices] = useState<Record<string, TPriceCheck>>({});
@@ -219,7 +222,7 @@ export function App() {
     setTab((t) => (panchayat && !panchayat.applied ? "panchayat" : t));
     if (panchayat && !panchayat.applied) void ruleOn(raw, panchayat);
     else if (looksLikeQuestion(raw)) {
-      // A question goes straight to Munshi, without spending a router call.
+      // A question goes straight to Buggy, without spending a router call.
       setText("");
       askDirect(raw);
     } else void dictate(raw);
@@ -336,7 +339,7 @@ export function App() {
           />
         );
       }
-      return <Working title="Opening your khata" />;
+      return <Working title="Opening your ledger" />;
     }
     if (busy?.kind === "dictate") return <Working title="Reading what you said" quote={busy.text} detail="Every amount is checked against your words." />;
     if (confirm) {
@@ -383,9 +386,9 @@ export function App() {
           );
         }
         return (
-          <div className="panchayat-empty">
+          <div className="panchayat-empty view">
             <span className="panchayat-empty-icon" aria-hidden="true">⚖️</span>
-            <h2 className="screen-title">Your goals are at peace</h2>
+            <h1 className="page-title">Your goals are at peace</h1>
             <p className="muted">When a big expense comes up, they gather here and argue it out. You make the final call.</p>
             <div className="chips chips-center">
               <button type="button" className="chip" onClick={() => suggest("Laptop died, new one is 70 thousand, need it this month")}>💻 Laptop died, new one is 70 thousand</button>
@@ -416,29 +419,35 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <span className="brand" aria-label="Paisa Panchayat"><span aria-hidden="true">🪙</span> Paisa Panchayat</span>
-        <Badge tone="solid">Synthetic data</Badge>
+        <div className="top-inner">
+          <span className="brand"><span className="brand-mark" aria-hidden="true">₹</span> PennyWise</span>
+          <Badge tone="onink">Synthetic data</Badge>
+        </div>
       </header>
 
       <main className="main">
-        {failure ? <ErrorBand message={failure.message} onRetry={failure.retry} onDismiss={() => setFailure(null)} /> : null}
-        {info ? <div className="info-band" role="status"><span>{info}</span><button type="button" className="btn-link" onClick={() => setInfo(null)}>Dismiss</button></div> : null}
-        {showSaved ? (
-          <div className="saved-band" role="status">
-            <span><b>Saved {saved.count} {saved.count === 1 ? "entry" : "entries"}.</b></span>
-            {saved.ids.length > 0 ? (
-              <button type="button" className="btn btn-quiet" disabled={busy !== null} onClick={() => undoSaved(saved.ids)}>Undo</button>
-            ) : (
-              <span className="muted">Undo any row in the Khata.</span>
-            )}
+        {failure || info || showSaved ? (
+          <div className="banners">
+            {failure ? <ErrorBand message={failure.message} onRetry={failure.retry} onDismiss={() => setFailure(null)} /> : null}
+            {info ? <div className="info-band" role="status"><span>{info}</span><button type="button" className="text-link" onClick={() => setInfo(null)}>Dismiss</button></div> : null}
+            {showSaved && saved ? (
+              <div className="saved-band" role="status">
+                <span><b>✓ Saved {saved.count} {saved.count === 1 ? "entry" : "entries"}.</b></span>
+                {saved.ids.length > 0 ? (
+                  <button type="button" className="btn btn-quiet btn-small" disabled={busy !== null} onClick={() => undoSaved(saved.ids)}>Undo</button>
+                ) : (
+                  <span className="muted small">Undo any row on Home.</span>
+                )}
+              </div>
+            ) : null}
           </div>
         ) : null}
-        {body()}
+        <div key={confirm ? "confirm" : tab} className="view-anim">{body()}</div>
       </main>
 
       {state && !munshiOpen ? (
-        <button type="button" className="munshi-fab" aria-label="Ask Munshi" onClick={() => setMunshiOpen(true)}>
-          <span aria-hidden="true">📒</span>
+        <button type="button" className="munshi-fab" aria-label="Ask Buggy" onClick={() => setMunshiOpen(true)}>
+          <ChatIcon />
           {busy?.kind === "munshi" ? <span className="fab-dot" /> : null}
         </button>
       ) : null}
@@ -457,46 +466,49 @@ export function App() {
       ) : null}
 
       <div className="dock">
-        <form className={`bar ${rulingMode ? "is-ruling" : ""}`} onSubmit={(e) => { e.preventDefault(); submit(); }}>
-          <span className="bar-mic" aria-hidden="true">🎙️</span>
-          <label className="visually-hidden" htmlFor="dictation">{rulingMode ? "Your ruling" : "Say something"}</label>
-          <textarea
-            id="dictation"
-            ref={box}
-            className="bar-input"
-            rows={1}
-            value={text}
-            placeholder={rulingMode ? RULING_TEXT : SAVED_TEXT}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-          />
-          <button type="submit" className="bar-send" aria-label={rulingMode ? "Rule" : "Send"} disabled={!text.trim() || busy !== null}>
-            {busy && !["ledger", "import"].includes(busy.kind) ? "…" : rulingMode ? "⚖️" : "➤"}
-          </button>
-        </form>
-        <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>
-        <nav className="tabs" role="tablist" aria-label="Sections">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id && !confirm}
-              className="tab"
-              onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
-            >
-              <span className="tab-icon" aria-hidden="true">{t.icon}</span>
-              <span className="tab-label">{t.label}</span>
-              {t.id === "panchayat" && rulingMode ? <span className="tab-dot" aria-label="open" /> : null}
-              {t.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
+        <div className="dock-inner">
+          <form className={`bar ${rulingMode ? "is-ruling" : ""}`} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+            <Wave active={typing} />
+            <label className="visually-hidden" htmlFor="dictation">{rulingMode ? "Your ruling" : "Say something"}</label>
+            <textarea
+              id="dictation"
+              ref={box}
+              className="bar-input"
+              rows={1}
+              value={text}
+              placeholder={rulingMode ? RULING_TEXT : SAVED_TEXT}
+              onChange={(e) => { setText(e.target.value); pingTyping(); }}
+              onKeyDown={(e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                  e.preventDefault();
+                  submit();
+                }
+              }}
+            />
+            <button type="submit" className="bar-send" aria-label={rulingMode ? "Rule" : "Send"} disabled={!text.trim() || busy !== null}>
+              {busy && !["ledger", "import"].includes(busy.kind) ? "…" : rulingMode ? <RulingIcon /> : <SendIcon />}
             </button>
-          ))}
-        </nav>
+          </form>
+          <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>
+          <nav className="tabs" role="tablist" aria-label="Sections">
+            <span className="tab-glider" aria-hidden="true" style={{ transform: `translateX(${TABS.findIndex((t) => t.id === tab) * 100}%)`, width: `${100 / TABS.length}%` }}><i /></span>
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === t.id && !confirm}
+                className="tab"
+                onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
+              >
+                <span className="tab-icon">{t.icon}</span>
+                <span className="tab-label">{t.label}</span>
+                {t.id === "panchayat" && rulingMode ? <span className="tab-dot" aria-label="open" /> : null}
+                {t.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </div>
   );

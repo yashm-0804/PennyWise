@@ -1,6 +1,6 @@
 # Agentic AI Hackathon (Product Space × Wispr Flow): tracker
 
-Last updated: 2026-10-31 18:36 IST by /hack-iterate
+Last updated: 2026-10-31 21:55 IST by /hack-iterate
 
 ## Event
 
@@ -10,7 +10,7 @@ Last updated: 2026-10-31 18:36 IST by /hack-iterate
 | Organiser / sponsor | Product Space, in collaboration with Wispr Flow | https://theproductspace.in/ai-hackathon-details |
 | Format | One day. Fixed problem statements (pick 1 of 5). Venue and team size: UNKNOWN (kickoff is an online live class link; the page does not state team size) | https://theproductspace.in/ai-hackathon-details |
 | Tracks | 01 Content repurposing studio · 02 Adaptive exam-prep tutor · 03 Meeting-to-execution agent · 04 Personal finance coach · 05 Career pivot coach | https://theproductspace.in/ai-hackathon-details/problem-statement |
-| Our track / problem statement | 04 Personal finance coach with a living money model. Product: Paisa Panchayat, with Munshi as its record-keeper persona | research/problem-statement-04-screenshot.png, docs/IDEAS.md |
+| Our track / problem statement | 04 Personal finance coach with a living money model. Product: PennyWise (was Paisa Panchayat), with Ledger (was Khata), Buggy (was Munshi) and the Panchayat feature | research/problem-statement-04-screenshot.png, docs/IDEAS.md |
 | Submission deadline | 2026-10-31 23:59 IST | https://theproductspace.in/ai-hackathon-details |
 | Other dates | Kickoff 2026-10-31 12:30 IST (mandatory) · LinkedIn streak submission 2026-11-01 23:59 IST · Demo Day: to be announced · Winners: to be announced | https://theproductspace.in/ai-hackathon-details |
 | Prizes | UNKNOWN (not on the page) | https://theproductspace.in/ai-hackathon-details |
@@ -57,7 +57,7 @@ Target weighted score: 8.0 / 10
 
 ## Phase status
 
-Hours left at the last update: 5.4 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
+Hours left at the last update: 2.1 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
 
 Scaling: under 24 hours. 2–3 ideas, shortlist 1–2, test rounds 1 and 6, skip HTML pages.
 
@@ -98,6 +98,7 @@ Status values: not started · in progress · awaiting review · done
 | 2026-10-31 | Plan approved. Feature freeze stays at 17:59 IST and unbuilt extras are cut. Free Gemini key. Local commits allowed | Keeps 6 hours for testing and the video; the review expects most SHOULD items to be cut | User |
 | 2026-10-31 | Redesign the frontend as a friendly, pictorial app for students: big icons, rings and tappable cards, no charts | The user: it looked like a report, not an app. Backend unchanged | User |
 | 2026-10-31 | Munshi becomes a floating round chat on every screen, answers free-form questions through Gemini, and Home figures explain themselves. Past the 17:59 freeze at the user's request | The user's test: Munshi couldn't answer real questions, and a negative figure had no reason | User |
+| 2026-10-31 | Apply the Payoneer-inspired design system (dribbble.com-DESIGN.md) to the mobile frontend, with reactive touches. Rename to PennyWise, Ledger and Buggy. This frontend is mobile only (Android and iOS); the website has a separate frontend | The user's direction at 21:35 to 21:52 IST. Past the freeze and into the ship buffer at the user's request | User |
 | 2026-10-31 | No speech code in the app. A plain text box takes Wispr Flow dictation; typed input also works | Meets "main input is natural speech captured through Wispr Flow" without building speech features | User |
 | 2026-10-31 | No "CA" or "Chartered Accountant" in the product's name or persona; live SMS and email fetching are out; synthetic data only | Protected-designation risk, build time, and Gemini data terms | User, via I-5 |
 
@@ -112,6 +113,7 @@ Status values: not started · in progress · awaiting review · done
 - Two Gemini keys were pasted in chat on 2026-10-31; rotate both after the hackathon
 - The user wants the product as an Android and iOS app, tested first in a phone view on the web, with simulators later (the user, 2026-10-31). The phone preview is at /phone. Mobile frontend plan and native route are undecided
 - The app is now pitched at students, but the demo data is a salaried person (₹85,000 income, rent, flat deposit). Should the demo data change?
+- Where is the website frontend? It isn't in this project or under ~/Desktop/projects (checked 21:52 IST)
 - Who is the teammate, and what do they own? The plan assigns no work to them yet
 - Demo Day date, format and panel
 - Prizes

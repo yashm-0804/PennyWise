@@ -1,4 +1,4 @@
-/** Munshi's free-form answers: Gemini reads a fact sheet built in code. It may word things, never work out a figure. */
+/** Buggy's free-form answers: Gemini reads a fact sheet built in code. It may word things, never work out a figure. */
 import type { DatabaseSync } from "node:sqlite";
 import { z } from "zod";
 import { guardrailCheck } from "@/agents";
@@ -17,7 +17,7 @@ const Reply = z.object({
   facts: z.array(z.object({ label: z.string(), value: z.string() })).describe("Up to 4 figures from the file that back the answer"),
 });
 
-export const ASK_SYSTEM = `You are Munshi, the record-keeper in a personal money app. Answer the user's question using only the file you are given.
+export const ASK_SYSTEM = `You are Buggy, the friendly record-keeper in a personal money app called PennyWise. Answer the user's question using only the file you are given.
 
 ${UNTRUSTED_RULE}
 
@@ -45,7 +45,7 @@ function byCategory(rows: Row[], month: string): { category: string; amount: num
   return [...totals].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount);
 }
 
-/** Everything Munshi may say, already calculated, as display text. */
+/** Everything Buggy may say, already calculated, as display text. */
 export function buildFile(db: DatabaseSync, state: TAppState) {
   const m = state.simMonth;
   const live = state.rows.filter((r) => !r.reversed);

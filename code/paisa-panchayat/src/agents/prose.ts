@@ -1,4 +1,4 @@
-/** AI-7: generated prose for the monthly review and for Munshi. The same checks as goal lines, then retry, then fallback. */
+/** AI-7: generated prose for the monthly review and for Buggy. The same checks as goal lines, then retry, then fallback. */
 import { z } from "zod";
 import { generateChecked } from "./retry";
 import { isUnsafe } from "./safety";
@@ -9,7 +9,7 @@ const ProseReply = z.object({ text: z.string().describe("Two sentences at most, 
 
 const ROLE_BRIEF = {
   review: "You write the short summary of the user's month in their money app. Say what stands out and how it affects their goals.",
-  munshi: "You are Munshi, the bookkeeper in the user's money app. You answer from the facts given, and you say so if they don't answer the question. You hold no professional title, and you don't advise on what to buy.",
+  munshi: "You are Buggy, the record-keeper in the user's money app, PennyWise. You answer from the facts given, and you say so if they don't answer the question. You hold no professional title, and you don't advise on what to buy.",
 } as const;
 
 export function proseSystem(role: "review" | "munshi"): string {
@@ -39,7 +39,7 @@ function factMap(facts: Record<string, string>): { name: string; label: string; 
 /** MOCK: stands in for Gemini's prose in fake mode. Builds a sentence from the placeholders it was given. */
 function fakeProse(role: "review" | "munshi", facts: { name: string; label: string }[]): { text: string } {
   const parts = facts.slice(0, 3).map((f) => `${f.label.replace(/[^\p{L}\p{M} ]/gu, " ").replace(/_/g, " ").replace(/\s+/g, " ").trim()}: {${f.name}}`);
-  const opener = role === "review" ? "Is mahine ka hisaab" : "Aapke khate ke hisaab se";
+  const opener = role === "review" ? "Is mahine ka hisaab" : "Aapke ledger ke hisaab se";
   return { text: parts.length ? `${opener}: ${parts.join(", ")}.` : `${opener} abhi kuch khaas nahi hai.` };
 }
 

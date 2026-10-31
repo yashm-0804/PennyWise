@@ -5,7 +5,7 @@ import { month, monthFromIndex, monthIndex } from "./format";
 
 type LlmSource = "gemini" | "cache" | "fake" | "template";
 
-export function Badge({ tone = "plain", children }: { tone?: "plain" | "solid" | "ok" | "ask" | "block" | "sim"; children: ReactNode }) {
+export function Badge({ tone = "plain", children }: { tone?: "plain" | "solid" | "onink" | "ok" | "ask" | "block" | "sim"; children: ReactNode }) {
   return <span className={`badge badge-${tone}`}>{children}</span>;
 }
 
@@ -84,9 +84,9 @@ export function Elapsed() {
 
 export function Working({ title, quote, detail }: { title: string; quote?: string; detail?: string }) {
   return (
-    <div className="working" role="status" aria-live="polite">
+    <div className="working view" role="status" aria-live="polite">
       <span className="typing typing-big" aria-hidden="true"><i /><i /><i /></span>
-      <h2 className="working-title">{title} <Elapsed /></h2>
+      <h2>{title} <Elapsed /></h2>
       {quote ? <p className="bubble-quote">“{quote}”</p> : null}
       {detail ? <p className="muted">{detail}</p> : null}
     </div>
@@ -99,7 +99,7 @@ export function ErrorBand({ message, onRetry, onDismiss }: { message: string; on
       <span><b>That didn’t go through.</b> {message} Nothing was saved.</span>
       <span className="row-gap">
         {onRetry ? <button type="button" className="btn btn-quiet" onClick={onRetry}>Try again</button> : null}
-        {onDismiss ? <button type="button" className="btn-link" onClick={onDismiss}>Dismiss</button> : null}
+        {onDismiss ? <button type="button" className="text-link" onClick={onDismiss}>Dismiss</button> : null}
       </span>
     </div>
   );

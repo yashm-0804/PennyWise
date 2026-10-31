@@ -32,7 +32,7 @@ function NoticeCard({ notice, simulated, goal, movedFrom }: {
   const fired = notice.kind === "condition_fired";
   return (
     <li className={`notice ${fired ? "is-fired" : ""}`}>
-      <Avatar emoji={NOTICE_ICON[notice.kind]} size={56} />
+      <Avatar emoji={NOTICE_ICON[notice.kind]} size={48} />
       <div className="notice-main">
         <h3 className="notice-title">{notice.title}</h3>
         <p>{bodyWithoutTitle(notice)}</p>
@@ -50,11 +50,11 @@ function Review({ review, simulated }: { review: TMonthlyReview; simulated: bool
   return (
     <section className="review" aria-label="Monthly review">
       <div className="review-head">
-        <h2 className="screen-title">🎉 {month(review.month)} recap</h2>
+        <h2>🎉 {month(review.month)} recap</h2>
         <span className="row-gap">{simulated ? <SimulatedBadge /> : null}<SourceBadge source={review.source} /></span>
       </div>
       <div className="review-top">
-        <Ring percent={savedPct} color="#00A08A" emoji="🐷" size={120} stroke={12} label={`Saved ${Math.round(savedPct)}% of income`} />
+        <Ring percent={savedPct} emoji="🐷" size={112} stroke={11} track="var(--canvas)" label={`Saved ${Math.round(savedPct)}% of income`} />
         <dl className="review-figures">
           <div><dt>💼 Came in</dt><dd>{inr(review.income)}</dd></div>
           <div><dt>🧾 Went out</dt><dd>{inr(review.spend)}</dd></div>
@@ -136,7 +136,7 @@ function ImportControls({ busy, result, onImport }: {
           <p className="import-added">✅ <b>{result.added}</b> added · {result.duplicates} {result.duplicates === 1 ? "duplicate" : "duplicates"} skipped</p>
           {result.needsReview.length > 0 ? (
             <details>
-              <summary>🤔 {result.needsReview.length} to look at</summary>
+              <summary>{result.needsReview.length} to look at</summary>
               <ul className="import-list">
                 {result.needsReview.map((t, i) => <li key={`${t.date}-${i}`}>{t.narration} · {inr(Math.abs(t.amount))}</li>)}
               </ul>
@@ -144,7 +144,7 @@ function ImportControls({ busy, result, onImport }: {
           ) : null}
           {result.unparsed.length > 0 ? (
             <details>
-              <summary>🚫 {result.unparsed.length} couldn&apos;t be read</summary>
+              <summary>{result.unparsed.length} couldn&apos;t be read</summary>
               <ul className="import-list muted">{result.unparsed.map((t) => <li key={t}>{t}</li>)}</ul>
             </details>
           ) : null}
@@ -174,7 +174,7 @@ export function NoticesTab({ state, nextMonth, simMonths, movedFrom, nextBusy, i
   const goalById = (id: string | null) => state.goals.find((g) => g.id === id);
 
   return (
-    <div className="notices">
+    <div className="notices view">
       <div className="notices-left">
         <button type="button" className="next-card" disabled={nextBusy} onClick={onNextMonth} data-testid="next-month">
           <span className="next-icon" aria-hidden="true">⏭️</span>
@@ -185,7 +185,7 @@ export function NoticesTab({ state, nextMonth, simMonths, movedFrom, nextBusy, i
         </button>
         {nextMonth && !nextBusy ? <p className="center"><SimulatedBadge /> {month(nextMonth.month)} imported</p> : null}
 
-        <div className="row-head"><h2 className="screen-title">Alerts</h2></div>
+        <div className="row-head"><h1 className="page-title">Alerts</h1></div>
         {notices.length === 0 ? (
           <Empty title="All quiet 😌">Alerts and nudges land here after an import.</Empty>
         ) : (

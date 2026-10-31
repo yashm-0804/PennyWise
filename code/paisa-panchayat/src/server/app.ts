@@ -99,7 +99,7 @@ export async function dictate(text: string): Promise<TDictateResponse> {
           return { ...i, status: "block" as const, messages: ["Whose payments should this cover? That name is too short to match safely."] };
         }
         if (i.type === "emi" && i.amount && paidThisMonth.has(i.amount)) {
-          return { ...i, status: "ask" as const, messages: [...i.messages, "This EMI is already in this month's khata. Saving it again counts it twice."] };
+          return { ...i, status: "ask" as const, messages: [...i.messages, "This EMI is already in this month's ledger. Saving it again counts it twice."] };
         }
         return i;
       })
