@@ -1,0 +1,26 @@
+{
+  "month": "2026-11",
+  "simulated": true,
+  "synthetic": true,
+  "bonus": 4200000,
+  "txns": [
+    { "date": "2026-11-01", "amount": -8500000, "narration": "SALARY CREDIT ACME TECH NOV", "payee": "Salary, Acme Tech", "reference": "SIM-NOV-001", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-02", "amount": 312000, "narration": "UPI/DMART/GROCERIES", "payee": "DMart", "reference": "SIM-NOV-002", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-03", "amount": 150000, "narration": "UPI/CULT GYM/MEMBERSHIP", "payee": "Cult Gym", "reference": "SIM-NOV-003", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-04", "amount": 148000, "narration": "UPI/SWIGGY/FOOD ORDER", "payee": "Swiggy", "reference": "SIM-NOV-004", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-05", "amount": 1800000, "narration": "NEFT/LANDLORD/RENT NOV", "payee": "Landlord", "reference": "SIM-NOV-005", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-06", "amount": 96000, "narration": "UPI/UBER/TRIP", "payee": "Uber", "reference": "SIM-NOV-006", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-07", "amount": 500000, "narration": "UPI/rahul.k@okaxis/SENT", "payee": "rahul.k@okaxis", "reference": "SIM-NOV-007", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-08", "amount": 342000, "narration": "POS/TOIT BREWPUB/DINING", "payee": "Toit", "reference": "SIM-NOV-008", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-09", "amount": 188000, "narration": "BILLPAY/BESCOM/ELECTRICITY", "payee": "BESCOM", "reference": "SIM-NOV-009", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-10", "amount": 99900, "narration": "BILLPAY/AIRTEL/BROADBAND", "payee": "Airtel", "reference": "SIM-NOV-010", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-12", "amount": 64900, "narration": "CARD/NETFLIX/SUBSCRIPTION", "payee": "Netflix", "reference": "SIM-NOV-011", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-13", "amount": 226000, "narration": "UPI/ZOMATO/FOOD ORDER", "payee": "Zomato", "reference": "SIM-NOV-012", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-14", "amount": 231000, "narration": "POS/INDIAN OIL/FUEL", "payee": "Indian Oil", "reference": "SIM-NOV-013", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-15", "amount": 39900, "narration": "CARD/HOTSTAR/SUBSCRIPTION", "payee": "Hotstar", "reference": "SIM-NOV-014", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-16", "amount": 241000, "narration": "UPI/BLINKIT/GROCERIES", "payee": "Blinkit", "reference": "SIM-NOV-015", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-20", "amount": 415000, "narration": "POS/TRUFFLES/DINING", "payee": "Truffles", "reference": "SIM-NOV-016", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-25", "amount": 840000, "narration": "NACH/BIKE EMI/HDFC", "payee": "Bike EMI", "reference": "SIM-NOV-017", "account": "bank", "source": "simulated" },
+    { "date": "2026-11-27", "amount": 183000, "narration": "UPI/SWIGGY/FOOD ORDER", "payee": "Swiggy", "reference": "SIM-NOV-018", "account": "bank", "source": "simulated" }
+  ]
+}

@@ -1,0 +1,503 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  TAppState, TCheckedItem, TDictateResponse, TImportResponse, TMunshiResponse, TNextMonthResponse, TPanchayat, TPriceCheck, TRulingResponse,
+} from "@/contract/schemas";
+import { ApiError, fileToBase64, getState, post } from "./api";
+import { ConfirmCard } from "./ConfirmCard";
+import { looksLikeQuestion } from "@/lib/question";
+import { newEventIds, simulatedMonths, stepForRoute } from "./flow";
+import { GoalsTab } from "./GoalsTab";
+import { KhataTab } from "./KhataTab";
+import { MunshiChat, type MunshiEntry } from "./MunshiChat";
+import { NoticesTab, type ImportArgs } from "./NoticesTab";
+import { PanchayatConvening, PanchayatScreen, type OpenPanchayat } from "./PanchayatScreen";
+import { Badge, Empty, ErrorBand, Working } from "./ui";
+
+type Tab = "khata" | "goals" | "panchayat" | "notices";
+const TABS: { id: Tab; label: string; icon: string }[] = [
+  { id: "khata", label: "Home", icon: "🏠" },
+  { id: "goals", label: "Goals", icon: "🎯" },
+  { id: "panchayat", label: "Panchayat", icon: "⚖️" },
+  { id: "notices", label: "Alerts", icon: "🔔" },
+];
+
+type Busy =
+  | { kind: "dictate" | "convene" | "ruling" | "munshi"; text: string }
+  | { kind: "confirm" | "apply" | "next-month" | "ledger" | "reset" }
+  | { kind: "import"; what: ImportArgs["kind"] };
+
+type Failure = { message: string; retry?: () => void };
+
+const SAVED_TEXT = "Bolo: what happened, or what if…";
+const RULING_TEXT = "Say your ruling: “Goa moves to June…”";
+
+function ResetControl({ busy, onReset }: { busy: boolean; onReset: () => void }) {
+  const [asking, setAsking] = useState(false);
+  if (!asking) return <button type="button" className="reset-link" disabled={busy} onClick={() => setAsking(true)}>Reset demo</button>;
+  return (
+    <span className="reset-ask">
+      Reset everything?{" "}
+      <button type="button" className="reset-link" onClick={() => { setAsking(false); onReset(); }}>Yes</button>{" "}
+      <button type="button" className="reset-link" onClick={() => setAsking(false)}>No</button>
+    </span>
+  );
+}
+
+export function App() {
+  const [state, setState] = useState<TAppState | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [tab, setTab] = useState<Tab>("khata");
+  const [busy, setBusy] = useState<Busy | null>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+  const [text, setText] = useState("");
+  const [lastSent, setLastSent] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<TDictateResponse | null>(null);
+  const [panchayat, setPanchayat] = useState<OpenPanchayat | null>(null);
+  const [munshi, setMunshi] = useState<MunshiEntry[]>([]);
+  const [munshiOpen, setMunshiOpen] = useState(false);
+  const [saved, setSaved] = useState<{ count: number; ids: string[] } | null>(null);
+  const [freshIds, setFreshIds] = useState<string[]>([]);
+  const [prices, setPrices] = useState<Record<string, TPriceCheck>>({});
+  const [nextMonth, setNextMonth] = useState<TNextMonthResponse | null>(null);
+  const [simRun, setSimRun] = useState<string[]>([]);
+  const [movedFrom, setMovedFrom] = useState<Record<string, string>>({});
+  const [importResult, setImportResult] = useState<TImportResponse | null>(null);
+
+  const box = useRef<HTMLTextAreaElement>(null);
+  const chatBox = useRef<HTMLTextAreaElement>(null);
+  const chatOpen = useRef(false);
+  useEffect(() => { chatOpen.current = munshiOpen; }, [munshiOpen]);
+  const munshiSeq = useRef(0);
+  const stateRef = useRef<TAppState | null>(null);
+
+  /** Wispr Flow types into whatever has focus, so focus comes home after every action. */
+  const focusBar = useCallback(() => {
+    if (window.matchMedia("(pointer: coarse)").matches) return; // Don't pop the phone keyboard.
+    const active = document.activeElement;
+    const home = chatOpen.current ? chatBox.current : box.current;
+    if (active instanceof HTMLInputElement || (active instanceof HTMLTextAreaElement && active !== home)) return;
+    home?.focus({ preventScroll: true });
+  }, []);
+
+  const refresh = useCallback(async () => {
+    const next = await getState();
+    stateRef.current = next;
+    setState(next);
+    setLoadError(null);
+    return next;
+  }, []);
+
+  useEffect(() => {
+    let live = true;
+    getState().then(
+      (next) => {
+        if (!live) return;
+        stateRef.current = next;
+        setState(next);
+      },
+      (e: unknown) => { if (live) setLoadError(e instanceof Error ? e.message : "Could not load."); },
+    );
+    box.current?.focus({ preventScroll: true });
+    return () => { live = false; };
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement;
+      if (t.closest("input, textarea, select, a, label, .why")) return;
+      focusBar();
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [focusBar]);
+
+  /** Every call goes through here, so busy, errors, retry and focus behave the same everywhere. */
+  const run = useCallback((first: Busy, work: () => Promise<void>): Promise<void> => {
+    const attempt = async () => {
+      setBusy(first);
+      setFailure(null);
+      setInfo(null);
+      try {
+        await work();
+      } catch (e) {
+        const message = e instanceof ApiError ? e.message : "Something went wrong.";
+        setFailure({ message, retry: () => { void attempt(); } });
+      } finally {
+        setBusy(null);
+        focusBar();
+      }
+    };
+    return attempt();
+  }, [focusBar]);
+
+  const convene = async (raw: string, utteranceId: string) => {
+    setBusy({ kind: "convene", text: raw });
+    setConfirm(null);
+    setPanchayat(null);
+    setTab("panchayat");
+    const data = await post<TPanchayat>("/api/panchayat", { text: raw, utteranceId });
+    setPanchayat({ data, ruling: null, applied: false });
+  };
+
+  const askMunshi = async (raw: string) => {
+    setBusy({ kind: "munshi", text: raw });
+    setMunshiOpen(true);
+    const res = await post<TMunshiResponse>("/api/munshi", { text: raw });
+    munshiSeq.current += 1;
+    setMunshi((m) => [{ id: munshiSeq.current, question: raw, res }, ...m]);
+    const price = res.price;
+    if (price) setPrices((all) => ({ ...all, [price.goalId]: price }));
+    await refresh();
+  };
+
+  const ruleOn = (raw: string, open: OpenPanchayat) => run({ kind: "ruling", text: raw }, async () => {
+    setText("");
+    try {
+      const res = await post<TRulingResponse>("/api/ruling", { panchayatId: open.data.id, text: raw });
+      setPanchayat((p) => (p ? { ...p, ruling: { text: raw, res } } : p));
+    } catch (e) {
+      setText((cur) => cur || raw);
+      throw e;
+    }
+  });
+
+  /** Tapping a plan needs no parsing, so it spends no model call. */
+  const choosePlan = (planId: string, label: string) => {
+    const open = panchayat;
+    if (!open || open.applied) return;
+    void run({ kind: "ruling", text: label }, async () => {
+      const res = await post<TRulingResponse>("/api/ruling", { panchayatId: open.data.id, text: label, ops: [{ op: "choose_plan", planId }] });
+      setPanchayat((p) => (p ? { ...p, ruling: { text: label, res } } : p));
+    });
+  };
+
+  /** The chat box takes questions. A statement such as a correction still goes through the confirm card. */
+  const sendFromChat = (raw: string) => {
+    if (looksLikeQuestion(raw)) {
+      askDirect(raw);
+      return;
+    }
+    setMunshiOpen(false);
+    void dictate(raw);
+  };
+
+  /** Puts a suggestion in the box for the user to edit or send. */
+  const suggest = (line: string) => {
+    setText(line);
+    box.current?.focus({ preventScroll: true });
+  };
+
+  const askDirect = (line: string) => {
+    if (busy) return;
+    void run({ kind: "munshi", text: line }, () => askMunshi(line));
+  };
+
+  const dictate = (raw: string) => run({ kind: "dictate", text: raw }, async () => {
+    setText("");
+    setSaved(null);
+    try {
+      const reply = await post<TDictateResponse>("/api/dictate", { text: raw });
+      setLastSent(reply.raw_text);
+      const step = stepForRoute(reply.route);
+      if (step === "confirm") setConfirm(reply);
+      else if (step === "panchayat") await convene(reply.raw_text, reply.utteranceId);
+      else if (step === "munshi") await askMunshi(reply.raw_text);
+      else setInfo("That sounds like a ruling, but no panchayat is open. Say the expense or what-if first.");
+    } catch (e) {
+      setText((cur) => cur || raw);
+      throw e;
+    }
+  });
+
+  const submit = () => {
+    const raw = text.trim();
+    if (!raw || busy) return;
+    setLastSent(raw);
+    setTab((t) => (panchayat && !panchayat.applied ? "panchayat" : t));
+    if (panchayat && !panchayat.applied) void ruleOn(raw, panchayat);
+    else if (looksLikeQuestion(raw)) {
+      // A question goes straight to Munshi, without spending a router call.
+      setText("");
+      askDirect(raw);
+    } else void dictate(raw);
+  };
+
+  const confirmItems = (items: TCheckedItem[]) => {
+    const reply = confirm;
+    if (!reply) return;
+    void run({ kind: "confirm" }, async () => {
+      const before = stateRef.current;
+      const res = await post<{ panchayat?: TPanchayat | null }>("/api/confirm", { utteranceId: reply.utteranceId, items });
+      const after = await refresh();
+      const ids = newEventIds(before, after);
+      setConfirm(null);
+      setFreshIds(ids);
+      setSaved({ count: items.length, ids });
+      if (res.panchayat) {
+        setPanchayat({ data: res.panchayat, ruling: null, applied: false });
+        setTab("panchayat");
+      } else {
+        setTab("khata");
+      }
+    });
+  };
+
+  const undoSaved = (ids: string[]) => run({ kind: "ledger" }, async () => {
+    for (const eventId of ids) await post("/api/undo", { eventId });
+    await refresh();
+    setSaved(null);
+    setFreshIds([]);
+  });
+
+  const undoOne = (eventId: string) => run({ kind: "ledger" }, async () => {
+    await post("/api/undo", { eventId });
+    await refresh();
+  });
+
+  const undoRule = (ruleId: string) => run({ kind: "ledger" }, async () => {
+    await post("/api/rule-undo", { ruleId });
+    await refresh();
+  });
+
+  const setTreatment = (eventId: string, treatment: "transfer" | "spend") => run({ kind: "ledger" }, async () => {
+    await post("/api/withdrawal", { eventId, treatment });
+    await refresh();
+  });
+
+  const applyRuling = () => {
+    const open = panchayat;
+    if (!open?.ruling) return;
+    const { text: rulingText, res } = open.ruling;
+    void run({ kind: "apply" }, async () => {
+      const applied = await post<TRulingResponse>("/api/ruling", { panchayatId: open.data.id, text: rulingText, ops: res.ops, apply: true });
+      // The preview's diff drives the animation: once applied, a re-computed diff has nothing left to show.
+      setPanchayat((p) => (p?.ruling ? { ...p, applied: true, ruling: { ...p.ruling, res: { ...applied, diff: res.diff } } } : p));
+      await refresh();
+    });
+  };
+
+  const closePanchayat = () => {
+    const wasApplied = panchayat?.applied;
+    setPanchayat(null);
+    setTab(wasApplied ? "goals" : "khata");
+  };
+
+  const runNextMonth = () => run({ kind: "next-month" }, async () => {
+    const goals = stateRef.current?.goals ?? [];
+    const res = await post<TNextMonthResponse>("/api/next-month");
+    setMovedFrom(Object.fromEntries(goals.map((g) => [g.id, g.projectedMonth])));
+    setNextMonth(res);
+    setSimRun((m) => (m.includes(res.month) ? m : [...m, res.month]));
+    await refresh();
+  });
+
+  const runImport = ({ kind, text: pasted, file, password }: ImportArgs) => run({ kind: "import", what: kind }, async () => {
+    setImportResult(null);
+    const payload = kind === "pdf" && file
+      ? { kind, base64: await fileToBase64(file), password }
+      : { kind, text: file ? await file.text() : pasted };
+    setImportResult(await post<TImportResponse>("/api/import", payload));
+    await refresh();
+    focusBar();
+  });
+
+  const reset = () => run({ kind: "reset" }, async () => {
+    await post("/api/reset");
+    setConfirm(null);
+    setPanchayat(null);
+    setMunshi([]);
+    setMunshiOpen(false);
+    setSaved(null);
+    setFreshIds([]);
+    setPrices({});
+    setNextMonth(null);
+    setSimRun([]);
+    setMovedFrom({});
+    setImportResult(null);
+    setLastSent(null);
+    setTab("khata");
+    await refresh();
+  });
+
+  const rulingMode = Boolean(panchayat && !panchayat.applied);
+  const simMonths = simulatedMonths(state, simRun);
+  const noticeCount = state?.notices.length ?? 0;
+
+  const body = () => {
+    if (!state) {
+      if (loadError) {
+        return (
+          <ErrorBand
+            message={loadError}
+            onRetry={() => { void refresh().catch((e: unknown) => setLoadError(e instanceof Error ? e.message : "Could not load.")); }}
+          />
+        );
+      }
+      return <Working title="Opening your khata" />;
+    }
+    if (busy?.kind === "dictate") return <Working title="Reading what you said" quote={busy.text} detail="Every amount is checked against your words." />;
+    if (confirm) {
+      return (
+        <ConfirmCard
+          key={confirm.utteranceId}
+          reply={confirm}
+          saving={busy?.kind === "confirm"}
+          onConfirm={confirmItems}
+          onDiscard={() => setConfirm(null)}
+        />
+      );
+    }
+    switch (tab) {
+      case "khata":
+        return (
+          <KhataTab
+            state={state}
+            freshIds={freshIds}
+            busy={busy !== null}
+            onUndo={undoOne}
+            onTreatment={setTreatment}
+            onSuggest={suggest}
+            onGoals={() => setTab("goals")}
+            resetControl={<ResetControl busy={busy !== null} onReset={reset} />}
+          />
+        );
+      case "goals":
+        return <GoalsTab state={state} prices={prices} onSuggest={suggest} />;
+      case "panchayat":
+        if (busy?.kind === "convene") return <PanchayatConvening text={busy.text} state={state} />;
+        if (panchayat) {
+          return (
+            <PanchayatScreen
+              key={panchayat.data.id}
+              open={panchayat}
+              state={state}
+              rulingBusy={busy?.kind === "ruling" ? busy.text : null}
+              applyBusy={busy?.kind === "apply"}
+              onApply={applyRuling}
+              onClose={closePanchayat}
+              onChoose={choosePlan}
+            />
+          );
+        }
+        return (
+          <div className="panchayat-empty">
+            <span className="panchayat-empty-icon" aria-hidden="true">⚖️</span>
+            <h2 className="screen-title">Your goals are at peace</h2>
+            <p className="muted">When a big expense comes up, they gather here and argue it out. You make the final call.</p>
+            <div className="chips chips-center">
+              <button type="button" className="chip" onClick={() => suggest("Laptop died, new one is 70 thousand, need it this month")}>💻 Laptop died, new one is 70 thousand</button>
+              <button type="button" className="chip" onClick={() => suggest("What if I cut dining by 30%?")}>🤔 What if I cut dining by 30%?</button>
+            </div>
+            {state.panchayats.length > 0 ? <p className="muted small">Past rulings are under Alerts.</p> : null}
+          </div>
+        );
+      case "notices":
+        return (
+          <NoticesTab
+            state={state}
+            nextMonth={nextMonth}
+            simMonths={simMonths}
+            movedFrom={movedFrom}
+            nextBusy={busy?.kind === "next-month"}
+            importBusy={busy?.kind === "import" ? busy.what : null}
+            importResult={importResult}
+            onNextMonth={runNextMonth}
+            onImport={runImport}
+          />
+        );
+    }
+  };
+
+  const showSaved = saved && tab !== "panchayat" && !confirm;
+
+  return (
+    <div className="app">
+      <header className="top">
+        <span className="brand" aria-label="Paisa Panchayat"><span aria-hidden="true">🪙</span> Paisa Panchayat</span>
+        <Badge tone="solid">Synthetic data</Badge>
+      </header>
+
+      <main className="main">
+        {failure ? <ErrorBand message={failure.message} onRetry={failure.retry} onDismiss={() => setFailure(null)} /> : null}
+        {info ? <div className="info-band" role="status"><span>{info}</span><button type="button" className="btn-link" onClick={() => setInfo(null)}>Dismiss</button></div> : null}
+        {showSaved ? (
+          <div className="saved-band" role="status">
+            <span><b>Saved {saved.count} {saved.count === 1 ? "entry" : "entries"}.</b></span>
+            {saved.ids.length > 0 ? (
+              <button type="button" className="btn btn-quiet" disabled={busy !== null} onClick={() => undoSaved(saved.ids)}>Undo</button>
+            ) : (
+              <span className="muted">Undo any row in the Khata.</span>
+            )}
+          </div>
+        ) : null}
+        {body()}
+      </main>
+
+      {state && !munshiOpen ? (
+        <button type="button" className="munshi-fab" aria-label="Ask Munshi" onClick={() => setMunshiOpen(true)}>
+          <span aria-hidden="true">📒</span>
+          {busy?.kind === "munshi" ? <span className="fab-dot" /> : null}
+        </button>
+      ) : null}
+      {state && munshiOpen ? (
+        <MunshiChat
+          state={state}
+          entries={munshi}
+          working={busy?.kind === "munshi" ? busy.text : null}
+          busy={busy !== null}
+          onSend={sendFromChat}
+          onAsk={askDirect}
+          onClose={() => setMunshiOpen(false)}
+          onUndoRule={undoRule}
+          inputRef={chatBox}
+        />
+      ) : null}
+
+      <div className="dock">
+        <form className={`bar ${rulingMode ? "is-ruling" : ""}`} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <span className="bar-mic" aria-hidden="true">🎙️</span>
+          <label className="visually-hidden" htmlFor="dictation">{rulingMode ? "Your ruling" : "Say something"}</label>
+          <textarea
+            id="dictation"
+            ref={box}
+            className="bar-input"
+            rows={1}
+            value={text}
+            placeholder={rulingMode ? RULING_TEXT : SAVED_TEXT}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+          />
+          <button type="submit" className="bar-send" aria-label={rulingMode ? "Rule" : "Send"} disabled={!text.trim() || busy !== null}>
+            {busy && !["ledger", "import"].includes(busy.kind) ? "…" : rulingMode ? "⚖️" : "➤"}
+          </button>
+        </form>
+        <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>
+        <nav className="tabs" role="tablist" aria-label="Sections">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id && !confirm}
+              className="tab"
+              onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
+            >
+              <span className="tab-icon" aria-hidden="true">{t.icon}</span>
+              <span className="tab-label">{t.label}</span>
+              {t.id === "panchayat" && rulingMode ? <span className="tab-dot" aria-label="open" /> : null}
+              {t.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
+}

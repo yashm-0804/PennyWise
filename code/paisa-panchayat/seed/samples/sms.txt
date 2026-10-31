@@ -1,0 +1,14 @@
+# SYNTHETIC DATA. Kalpit Sahakari Bank is a fictional bank; none of these messages are real.
+# Layouts are hand-written approximations of Indian bank SMS, not verified against real messages.
+
+Sent Rs.5,000.00 From Kalpit Bank A/C *1234 To rahul.k@okaxis On 05/10/26 Ref 628100000106. Not You? Call 1800-000-0000 (fictional)
+Acct XX1234 debited with INR 412.00 on 18-Oct-26; Uber India credited. UPI:628100000201. Call 1800-000-0000 if not you.
+Dear UPI user A/C X1234 debited by 380.0 on date 22Oct26 trf to Zomato Refno 628100000202
+Spent Rs.1,499.00 on Kalpit Bank Credit Card XX4321 at AMAZON on 16-10-2026. Not you? Call 1800-000-0000. Never share OTP or CVV.
+INR 649.00 spent on Kalpit Bank Card XX4321 on 20-Oct-26 at SPOTIFY. Avl Lmt: INR 88,000.00
+
+483921 is your OTP for a transaction of Rs.12,000.00 at CROMA on Card XX4321. Do not share it with anyone.
+Festive offer! Get flat Rs.2,000 cashback on Kalpit Bank Credit Card. Spend Rs.20,000 by 31-Oct-26. T&C apply. kalpit.example/offer
+You are pre-approved for a personal loan of Rs.5,00,000. Apply now: kalpit.example/loan
+Rs.399.00 will be debited on 28/10/26 for HOTSTAR via e-mandate on Card XX4321. Pause at kalpit.example/mandates
+Your txn of Rs.2,300.00 at MYNTRA on Card XX4321 was declined due to insufficient limit.
