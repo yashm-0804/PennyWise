@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { TAppState, TMunshiResponse } from "@/contract/schemas";
+import { BOX_TEXT } from "./flow";
 import { dateTime, humanize, inr, shortUrl } from "./format";
 import { CloseIcon, SendIcon } from "./icons";
 import { useTypingPulse, Wave } from "./motion";
@@ -155,7 +156,7 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
             className="bar-input"
             rows={1}
             value={text}
-            placeholder="Ask Buggy anything…"
+            placeholder={BOX_TEXT}
             onChange={(e) => { setText(e.target.value); pingTyping(); }}
             onKeyDown={(e) => {
               if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {

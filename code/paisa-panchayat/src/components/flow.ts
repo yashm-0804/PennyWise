@@ -2,6 +2,9 @@
 import type { TAppState, TCheckedItem, TDictateResponse, TGoalDiff, TPanchayat, TPlanAction, TRulingOp } from "@/contract/schemas";
 import { inr, month } from "./format";
 
+/** What every chat box shows until you speak. */
+export const BOX_TEXT = "Just whisper it.";
+
 export type Step = "confirm" | "panchayat" | "munshi" | "no-open-panchayat";
 
 export function stepForRoute(route: TDictateResponse["route"]): Step {

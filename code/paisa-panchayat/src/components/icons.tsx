@@ -19,6 +19,7 @@ export const RulingIcon = () => <Svg size={20}><path d="m14 5 5 5" /><path d="m1
 export const CloseIcon = () => <Svg size={20}><path d="M6 6l12 12M18 6 6 18" /></Svg>;
 export const MicIcon = () => <Svg size={20}><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" /><path d="M12 18v2.5" /></Svg>;
 export const LedgerIcon = () => <Svg><path d="M6 4h12a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 20H6a1.5 1.5 0 0 1-1.5-1.5v-13A1.5 1.5 0 0 1 6 4Z" /><path d="M9 4v16" /><path d="M12.5 9h4M12.5 13h4" /></Svg>;
+export const ProfileIcon = () => <Svg><circle cx="12" cy="8" r="3.75" /><path d="M4.75 20c.75-3.75 3.6-5.75 7.25-5.75s6.5 2 7.25 5.75" /></Svg>;
 export const PlusIcon = () => <Svg size={22}><path d="M12 5v14M5 12h14" /></Svg>;
 export const ReceiptIcon = () => <Svg><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4v-17Z" /><path d="M9.5 8h5M9.5 12h5" /></Svg>;
 export const WaveIcon = () => <Svg size={20}><rect x="3" y="3" width="18" height="18" rx="5" /><path d="M8 10.5v3M11 8.5v7M14 9.5v5M17 11v2" /></Svg>;

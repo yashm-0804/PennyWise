@@ -10,7 +10,7 @@ import { BellIcon, ChatIcon, CloseIcon, GoalIcon, HomeIcon, LedgerIcon, Panchaya
 import { useTypingPulse, Wave } from "./motion";
 import { ConfirmCard } from "./ConfirmCard";
 import { looksLikeQuestion } from "@/lib/question";
-import { newEventIds, simulatedMonths, stepForRoute } from "./flow";
+import { BOX_TEXT, newEventIds, simulatedMonths, stepForRoute } from "./flow";
 import { GoalsTab } from "./GoalsTab";
 import { KhataTab } from "./KhataTab";
 import { MunshiChat, type MunshiEntry } from "./MunshiChat";
@@ -18,7 +18,7 @@ import { ImportControls, NoticesTab, type ImportArgs } from "./NoticesTab";
 import { PanchayatConvening, PanchayatScreen, type OpenPanchayat } from "./PanchayatScreen";
 import { ProfileTab } from "./ProfileTab";
 import { SignIn } from "./SignIn";
-import { StartScreen, type OrbTarget } from "./StartScreen";
+import { StartOrbs, StartScreen } from "./StartScreen";
 import { Badge, ErrorBand, Working } from "./ui";
 
 type Tab = "start" | "khata" | "goals" | "panchayat" | "notices" | "profile";
@@ -31,24 +31,12 @@ const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "notices", label: "Nudges", icon: <BellIcon /> },
 ];
 
-/** The front door's box cycles through things to say, so it teaches what it can do. */
-const START_HINTS = [
-  "Swiggy pe 450 gaye",
-  "Whom have I lent money to?",
-  "What if I cut dining by 30%?",
-  "Laptop died, new one is 70 thousand",
-  "Mera EMI kitna jaata hai?",
-];
-
 type Busy =
   | { kind: "dictate" | "convene" | "ruling" | "munshi"; text: string }
   | { kind: "confirm" | "apply" | "next-month" | "ledger" | "reset" }
   | { kind: "import"; what: ImportArgs["kind"] };
 
 type Failure = { message: string; retry?: () => void };
-
-const SAVED_TEXT = "Bolo: what happened, or what if…";
-const RULING_TEXT = "Say your ruling: “Goa moves to June…”";
 
 function ResetControl({ busy, onReset }: { busy: boolean; onReset: () => void }) {
   const [asking, setAsking] = useState(false);
@@ -68,7 +56,6 @@ export function App() {
   const name = useAccountName();
   const [tab, setTab] = useState<Tab>("start");
   const [plusOpen, setPlusOpen] = useState(false);
-  const [hint, setHint] = useState(0);
   const [busy, setBusy] = useState<Busy | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -139,12 +126,6 @@ export function App() {
   useEffect(() => {
     if (name) focusBar();
   }, [name, focusBar]);
-
-  useEffect(() => {
-    if (tab !== "start" || text) return;
-    const timer = setInterval(() => setHint((h) => (h + 1) % START_HINTS.length), 2800);
-    return () => clearInterval(timer);
-  }, [tab, text]);
 
   /** Every call goes through here, so busy, errors, retry and focus behave the same everywhere. */
   const run = useCallback((first: Busy, work: () => Promise<void>): Promise<void> => {
@@ -398,9 +379,6 @@ export function App() {
             name={name ?? ""}
             entries={munshi}
             working={busy && (busy.kind === "munshi" || busy.kind === "dictate") ? busy.text : null}
-            noticeCount={noticeCount}
-            huddleOpen={huddleOpen}
-            onOpen={(target: OrbTarget) => { setSaved(null); setTab(target); }}
             onStartOver={() => setMunshi([])}
           />
         );
@@ -570,7 +548,7 @@ export function App() {
               className="bar-input"
               rows={1}
               value={text}
-              placeholder={rulingMode ? RULING_TEXT : onStart ? `Bolo: ${START_HINTS[hint]}` : SAVED_TEXT}
+              placeholder={BOX_TEXT}
               onChange={(e) => { setText(e.target.value); pingTyping(); }}
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -586,7 +564,9 @@ export function App() {
           {onStart
             ? <p className="bar-hint">Speak with Wispr Flow, or type</p>
             : <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>}
-          {!onStart ? (
+          {onStart ? (
+            <StartOrbs noticeCount={noticeCount} huddleOpen={huddleOpen} onOpen={(target) => { setSaved(null); setTab(target); }} />
+          ) : (
             <nav className="tabs" role="tablist" aria-label="Sections">
               {tabIndex >= 0 ? <span className="tab-glider" aria-hidden="true" style={{ transform: `translateX(${tabIndex * 100}%)`, width: `${100 / TABS.length}%` }}><i /></span> : null}
               {TABS.map((t) => (
@@ -605,7 +585,7 @@ export function App() {
                 </button>
               ))}
             </nav>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

@@ -527,10 +527,12 @@ button:focus-visible, a:focus-visible, .why:focus-visible, summary:focus-visible
 .start .chat-bubble { background: var(--surface); }
 .start-over { align-self: center; color: var(--muted); }
 .start-over:hover { background: var(--surface); }
-.orbs { flex: none; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 16px 8px 8px; }
+.app.is-start .dock-inner { padding-top: 16px; }
+.orbs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 14px 0 6px; }
 .orb { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--ink); font-size: 12px; font-weight: 500; border-radius: var(--r-md); animation: card-in 0.45s var(--ease) backwards; }
-.orb-disc { position: relative; width: 58px; height: 58px; border-radius: 50%; background: #fff; color: #0d0c22; display: grid; place-items: center; font-size: 26px; line-height: 1; transition: transform 0.2s var(--ease), background 0.18s; }
-.orb:hover .orb-disc { background: #faebf9; transform: translateY(-3px) scale(1.05); }
+.orb-disc { position: relative; width: 58px; height: 58px; border-radius: 50%; background: #fff; color: #0d0c22; display: grid; place-items: center; transition: transform 0.2s var(--ease), background 0.18s, color 0.18s; }
+.orb-disc svg { width: 26px; height: 26px; stroke-width: 1.5; }
+.orb:hover .orb-disc { background: var(--accent); color: var(--on-accent); transform: translateY(-3px) scale(1.05); }
 .orb:active .orb-disc { transform: scale(0.92); }
 .orb-disc .tab-count { top: -2px; right: -2px; }
 .orb-disc .tab-dot { top: 2px; right: 2px; }
@@ -543,7 +545,7 @@ button:focus-visible, a:focus-visible, .why:focus-visible, summary:focus-visible
 .bar-plus { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; color: var(--ink); transition: background 0.15s, transform 0.2s var(--ease); }
 .bar-plus:hover { background: var(--surface); transform: rotate(90deg); }
 .bar-plus:active { opacity: 0.6; }
-.app.is-start .bar-hint { color: var(--muted); text-align: center; padding-bottom: 4px; }
+.app.is-start .bar-hint { color: var(--muted); text-align: center; }
 .sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: calc(100% - 48px); overflow-y: auto; background: var(--canvas); border-radius: 40px 40px 0 0; animation: sheet-up 0.32s var(--ease) backwards; }
 .sheet .working { padding-bottom: 48px; }
 .sheet-pad { padding: 24px 16px calc(24px + env(safe-area-inset-bottom)); }

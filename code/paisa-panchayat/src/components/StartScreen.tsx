@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import type { TAppState } from "@/contract/schemas";
 import { firstName } from "./account";
 import { inr, month } from "./format";
+import { BellIcon, GoalIcon, LedgerIcon, PanchayatIcon, ProfileIcon } from "./icons";
 import { Answer, type MunshiEntry } from "./MunshiChat";
 import { leftReason } from "./reasons";
 import { Elapsed } from "./ui";
@@ -11,23 +12,42 @@ import { Why } from "./Why";
 
 export type OrbTarget = "khata" | "goals" | "panchayat" | "notices" | "profile";
 
-const ORBS: { id: OrbTarget; label: string; emoji: string }[] = [
-  { id: "khata", label: "Ledger", emoji: "📒" },
-  { id: "goals", label: "Goals", emoji: "🎯" },
-  { id: "panchayat", label: "Huddle", emoji: "🗣️" },
-  { id: "notices", label: "Nudges", emoji: "🔔" },
-  { id: "profile", label: "Profile", emoji: "👤" },
+const ORBS: { id: OrbTarget; label: string; icon: React.ReactNode }[] = [
+  { id: "khata", label: "Ledger", icon: <LedgerIcon /> },
+  { id: "goals", label: "Goals", icon: <GoalIcon /> },
+  { id: "panchayat", label: "Huddle", icon: <PanchayatIcon /> },
+  { id: "notices", label: "Nudges", icon: <BellIcon /> },
+  { id: "profile", label: "Profile", icon: <ProfileIcon /> },
 ];
 
-/** The app's front door: one question, one box, and a bubble for everything else. Answers appear here without leaving. */
-export function StartScreen({ state, name, entries, working, noticeCount, huddleOpen, onOpen, onStartOver }: {
+/** A bubble for every other section, below the box. */
+export function StartOrbs({ noticeCount, huddleOpen, onOpen }: {
+  noticeCount: number;
+  huddleOpen: boolean;
+  onOpen: (target: OrbTarget) => void;
+}) {
+  return (
+    <nav className="orbs" aria-label="Sections">
+      {ORBS.map((o, i) => (
+        <button type="button" key={o.id} className="orb" style={{ animationDelay: `${120 + i * 60}ms` }} onClick={() => onOpen(o.id)}>
+          <span className="orb-disc" aria-hidden="true">
+            {o.icon}
+            {o.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
+            {o.id === "panchayat" && huddleOpen ? <span className="tab-dot" /> : null}
+          </span>
+          <span className="orb-label">{o.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/** The app's front door: one question above the box. Answers appear here without leaving. */
+export function StartScreen({ state, name, entries, working, onStartOver }: {
   state: TAppState;
   name: string;
   entries: MunshiEntry[];
   working: string | null;
-  noticeCount: number;
-  huddleOpen: boolean;
-  onOpen: (target: OrbTarget) => void;
   onStartOver: () => void;
 }) {
   const end = useRef<HTMLDivElement>(null);
@@ -67,18 +87,6 @@ export function StartScreen({ state, name, entries, working, noticeCount, huddle
           </div>
         )}
       </div>
-      <nav className="orbs" aria-label="Sections">
-        {ORBS.map((o, i) => (
-          <button type="button" key={o.id} className="orb" style={{ animationDelay: `${120 + i * 60}ms` }} onClick={() => onOpen(o.id)}>
-            <span className="orb-disc" aria-hidden="true">
-              {o.emoji}
-              {o.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
-              {o.id === "panchayat" && huddleOpen ? <span className="tab-dot" /> : null}
-            </span>
-            <span className="orb-label">{o.label}</span>
-          </button>
-        ))}
-      </nav>
     </div>
   );
 }
