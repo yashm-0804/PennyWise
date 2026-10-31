@@ -16,6 +16,7 @@ import { KhataTab } from "./KhataTab";
 import { MunshiChat, type MunshiEntry } from "./MunshiChat";
 import { ImportControls, NoticesTab, type ImportArgs } from "./NoticesTab";
 import { PanchayatConvening, PanchayatScreen, type OpenPanchayat } from "./PanchayatScreen";
+import { Logo } from "./pictures";
 import { ProfileTab } from "./ProfileTab";
 import { SignIn } from "./SignIn";
 import { StartOrbs, StartScreen } from "./StartScreen";
@@ -464,7 +465,7 @@ export function App() {
       <main ref={scroller} className="main">
       <header className="top">
         <div className="top-inner">
-          <span className="brand"><span className="brand-mark" aria-hidden="true">₹</span> PennyWise</span>
+          <span className="brand"><Logo className="logo-chip" /> PennyWise</span>
           <span className="top-right">
             <Badge tone="onink">Synthetic data</Badge>
             <button type="button" className="top-avatar" aria-label="Your profile" onClick={() => { setConfirm(null); setTab("profile"); }}>{name.charAt(0).toUpperCase()}</button>

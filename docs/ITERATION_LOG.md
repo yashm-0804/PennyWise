@@ -134,4 +134,6 @@ Restyled every mobile screen from the user's three Payoneer mobile concept refer
 
 **Follow-up at 22:48 IST (user request):** on Home, the bubbles now use outline icons on white instead of emoji, and they sit below the box. Every chat box, including the ruling box and Buggy's, now shows only "Just whisper it." The rotating example lines are gone. "Pick a plan, or say your own" and the pink border now carry the ruling cue. 480 tests, type check, lint with no errors and production build pass, and Home was checked in fake mode at 390 × 844 and 360 × 640.
 
+**Follow-up at 22:54 IST (user request):** the user's logo replaces the ₹ mark in the header, at the centre of Home, on sign-in and as the app icon. It's their artwork lifted off its background, not a redraw, and the original is at `docs/brand/pennywise-logo-original.jpg`. The spinning ring around the old coin is gone. The logo now pulses while you type. 480 tests, type check, lint with no errors and production build pass, and it was checked in fake mode at 390 × 844 and 360 × 640.
+
 ---

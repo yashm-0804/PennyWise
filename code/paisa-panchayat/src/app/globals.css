@@ -80,7 +80,8 @@ button:focus-visible, a:focus-visible, .why:focus-visible, summary:focus-visible
 .top-avatar:hover { transform: scale(1.08); }
 .top-avatar:active { opacity: 0.6; }
 .brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 18px; white-space: nowrap; }
-.brand-mark { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-size: 16px; font-weight: 800; }
+.logo { display: block; flex: none; height: auto; pointer-events: none; }
+.logo-chip { width: 36px; padding: 2px; border-radius: 50%; background: #fff; }
 .main { --top-h: calc(60px + env(safe-area-inset-top)); flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scroll-behavior: smooth; }
 .view { padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 32px; }
 .main, .start-scroll, .chat-scroll, .sheet { scrollbar-width: none; }
@@ -515,13 +516,11 @@ button:focus-visible, a:focus-visible, .why:focus-visible, summary:focus-visible
 .greeting h1 { font-size: 34px; font-weight: 300; line-height: 1.18; letter-spacing: -0.5px; animation: view-in 0.5s var(--ease) 0.1s backwards; }
 .greeting-stat { color: var(--muted); font-size: 14px; animation: view-in 0.5s var(--ease) 0.25s backwards; }
 .thread-head { flex: none; margin-top: 0; padding: calc(var(--top-h) + 2px) 16px 16px; text-align: center; font-size: 14px; border-radius: 0 0 var(--r-lg) var(--r-lg); }
-.coin { position: relative; flex: none; width: 120px; height: 120px; border-radius: 50%; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 700; font-size: 60px; line-height: 1; animation: pop-in 0.5s var(--ease); }
-.coin::after { content: ""; position: absolute; inset: -13px; border-radius: 50%; background: var(--ring-rainbow); -webkit-mask: var(--ring-mask); mask: var(--ring-mask); animation: spin 14s linear infinite; }
-.is-typing .coin::after { animation-duration: 3s; }
+.logo-home { width: min(172px, 24dvh); animation: pop-in 0.5s var(--ease), logo-breathe 5s ease-in-out 0.5s infinite; }
+.is-typing .logo-home { animation: logo-breathe 0.9s ease-in-out infinite; }
+@keyframes logo-breathe { 50% { transform: scale(1.03); } }
+.logo-big { width: min(140px, 22dvh); animation: pop-in 0.5s var(--ease); }
 @keyframes spin { to { transform: rotate(360deg); } }
-.coin-big { width: 96px; height: 96px; font-size: 48px; }
-.coin-small { width: 40px; height: 40px; font-size: 20px; animation: none; }
-.coin-small::after { display: none; }
 .start-thread { margin-top: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
 .start .chat-me { background: var(--accent); color: var(--on-accent); }
 .start .chat-bubble { background: var(--surface); }

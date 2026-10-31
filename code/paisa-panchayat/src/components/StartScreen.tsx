@@ -6,6 +6,7 @@ import { firstName } from "./account";
 import { inr, month } from "./format";
 import { BellIcon, GoalIcon, LedgerIcon, PanchayatIcon, ProfileIcon } from "./icons";
 import { Answer, type MunshiEntry } from "./MunshiChat";
+import { Avatar, Logo } from "./pictures";
 import { leftReason } from "./reasons";
 import { Elapsed } from "./ui";
 import { Why } from "./Why";
@@ -67,7 +68,7 @@ export function StartScreen({ state, name, entries, working, onStartOver }: {
       <div className="start-scroll">
         {!talking ? (
           <div className="greeting glass">
-            <span className="coin" aria-hidden="true">₹</span>
+            <Logo className="logo-home" />
             <h1>What can I help with, {firstName(name)}?</h1>
             <p className="greeting-stat">
               <Why reason={leftReason(state)}>{inr(Math.abs(left))} {left < 0 ? "over" : "left"} in {month(state.simMonth)}</Why>
@@ -79,7 +80,7 @@ export function StartScreen({ state, name, entries, working, onStartOver }: {
             {working ? (
               <article className="chat-turn" role="status" aria-live="polite">
                 <p className="chat-me">{working}</p>
-                <div className="chat-munshi"><span className="coin coin-small" aria-hidden="true">₹</span><div className="chat-bubble"><span className="typing"><i /><i /><i /></span> <Elapsed /></div></div>
+                <div className="chat-munshi"><Avatar emoji="🐞" size={40} tint="goal" /><div className="chat-bubble"><span className="typing"><i /><i /><i /></span> <Elapsed /></div></div>
               </article>
             ) : null}
             {!working ? <button type="button" className="text-link start-over" onClick={onStartOver}>Start over</button> : null}

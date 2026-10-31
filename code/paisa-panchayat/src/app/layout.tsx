@@ -9,7 +9,6 @@ const devanagari = Mukta({ weight: ["400", "500", "700"], subsets: ["devanagari"
 export const metadata: Metadata = {
   title: "PennyWise",
   description: "Talk through your money. Your goals argue, you make the call.",
-  icons: { icon: "/icon.svg" },
 };
 
 export const viewport: Viewport = { themeColor: "#FFFFFF", colorScheme: "light", viewportFit: "cover" };

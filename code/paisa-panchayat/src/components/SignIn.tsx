@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "./account";
+import { Logo } from "./pictures";
 
 export function SignIn() {
   const [name, setName] = useState("");
@@ -9,7 +10,7 @@ export function SignIn() {
   return (
     <main className="signin">
       <div className="signin-top glass">
-        <span className="coin coin-big" aria-hidden="true">₹</span>
+        <Logo className="logo-big" />
         <h1>Welcome to PennyWise</h1>
         <p className="signin-sub">Talk through your money. Your goals work it out, and you make the call.</p>
       </div>

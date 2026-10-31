@@ -1,6 +1,6 @@
 # Agentic AI Hackathon (Product Space × Wispr Flow): tracker
 
-Last updated: 2026-10-31 22:48 IST by /hack-iterate
+Last updated: 2026-10-31 22:54 IST by /hack-iterate
 
 ## Event
 
@@ -57,7 +57,7 @@ Target weighted score: 8.0 / 10
 
 ## Phase status
 
-Hours left at the last update: 1.2 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
+Hours left at the last update: 1.1 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
 
 Scaling: under 24 hours. 2–3 ideas, shortlist 1–2, test rounds 1 and 6, skip HTML pages.
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { TAppState, TGoalView } from "@/contract/schemas";
 
@@ -47,6 +48,11 @@ export function rowEmoji(row: Pick<Row, "kind" | "label" | "category">): string 
   if (row.kind === "card_bill") return "💳";
   const label = row.label.toLowerCase();
   return BRANDS.find(([re]) => re.test(label))?.[1] ?? categoryEmoji(row.category);
+}
+
+/** The PennyWise logo. It always sits beside the app's name or greeting, so screen readers can skip it. */
+export function Logo({ className }: { className: string }) {
+  return <Image src="/logo.png" alt="" width={512} height={512} unoptimized loading="eager" className={`logo ${className}`} />;
 }
 
 export function Avatar({ emoji, size = 44, tint }: { emoji: string; size?: number; tint?: string }) {
