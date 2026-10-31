@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { TAppState, TImportResponse, TMonthlyReview, TNextMonthResponse, TNotice } from "@/contract/schemas";
 import { dateTime, humanize, inr, month } from "./format";
+import { WaveIcon } from "./icons";
 import { Avatar, categoryEmoji, Ring } from "./pictures";
 import { AnimatedMonth, Badge, Elapsed, Empty, SimulatedBadge, SourceBadge } from "./ui";
 
@@ -48,13 +49,13 @@ function Review({ review, simulated }: { review: TMonthlyReview; simulated: bool
   const top = Math.max(...review.byCategory.map((c) => c.amount), 1);
   const savedPct = review.income > 0 ? Math.max(0, (review.saved / review.income) * 100) : 0;
   return (
-    <section className="review" aria-label="Monthly review">
+    <section className="review glass" aria-label="Monthly review">
       <div className="review-head">
         <h2>🎉 {month(review.month)} recap</h2>
         <span className="row-gap">{simulated ? <SimulatedBadge /> : null}<SourceBadge source={review.source} /></span>
       </div>
       <div className="review-top">
-        <Ring percent={savedPct} emoji="🐷" size={112} stroke={11} track="var(--canvas)" label={`Saved ${Math.round(savedPct)}% of income`} />
+        <Ring percent={savedPct} emoji="🐷" size={112} stroke={11} label={`Saved ${Math.round(savedPct)}% of income`} />
         <dl className="review-figures">
           <div><dt>💼 Came in</dt><dd>{inr(review.income)}</dd></div>
           <div><dt>🧾 Went out</dt><dd>{inr(review.spend)}</dd></div>
@@ -174,18 +175,17 @@ export function NoticesTab({ state, nextMonth, simMonths, movedFrom, nextBusy, i
   const goalById = (id: string | null) => state.goals.find((g) => g.id === id);
 
   return (
-    <div className="notices view">
-      <div className="notices-left">
-        <button type="button" className="next-card" disabled={nextBusy} onClick={onNextMonth} data-testid="next-month">
-          <span className="next-icon" aria-hidden="true">⏭️</span>
-          <span>
-            <b>{nextBusy ? <>Running the month <Elapsed /></> : "Import next month"}</b>
-            <span className="next-sub">Simulated, to show what happens next</span>
-          </span>
+    <div>
+      <header className="glass glass-head page-head">
+        <h1 className="page-title">Nudges</h1>
+        <p className="muted small">Things worth a look, worked out from your ledger.</p>
+        <button type="button" className="btn btn-accent btn-big btn-wide next-card" disabled={nextBusy} onClick={onNextMonth} data-testid="next-month">
+          <WaveIcon /> {nextBusy ? <>Running the month <Elapsed /></> : "Import next month"}
         </button>
-        {nextMonth && !nextBusy ? <p className="center"><SimulatedBadge /> {month(nextMonth.month)} imported</p> : null}
-
-        <div className="row-head"><h1 className="page-title">Nudges</h1></div>
+        <p className="small next-note">{nextMonth && !nextBusy ? <><SimulatedBadge /> {month(nextMonth.month)} imported</> : "Simulated, to show what happens next"}</p>
+      </header>
+      <div className="notices view">
+      <div className="notices-left">
         {notices.length === 0 ? (
           <Empty title="All quiet 😌">Nudges land here after an import.</Empty>
         ) : (
@@ -224,9 +224,10 @@ export function NoticesTab({ state, nextMonth, simMonths, movedFrom, nextBusy, i
 
       <div className="notices-right">
         {review ? <Review review={review} simulated={simMonths.has(review.month)} /> : (
-          <section className="review"><Empty title="No recap yet">Import a month to see your first recap.</Empty></section>
+          <section className="review glass"><Empty title="No recap yet">Import a month to see your first recap.</Empty></section>
         )}
         <ImportControls busy={importBusy} result={importResult} onImport={onImport} />
+      </div>
       </div>
     </div>
   );

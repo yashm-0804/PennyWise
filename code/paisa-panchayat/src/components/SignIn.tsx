@@ -8,9 +8,11 @@ export function SignIn() {
   const ready = name.trim().length > 0;
   return (
     <main className="signin">
-      <span className="coin coin-big" aria-hidden="true">₹</span>
-      <h1>Welcome to PennyWise</h1>
-      <p className="signin-sub">Talk through your money. Your goals work it out, and you make the call.</p>
+      <div className="signin-top glass">
+        <span className="coin coin-big" aria-hidden="true">₹</span>
+        <h1>Welcome to PennyWise</h1>
+        <p className="signin-sub">Talk through your money. Your goals work it out, and you make the call.</p>
+      </div>
       <form className="signin-form" onSubmit={(e) => { e.preventDefault(); if (ready) signIn(name); }}>
         <label htmlFor="signin-name" className="caption">What should we call you?</label>
         <input

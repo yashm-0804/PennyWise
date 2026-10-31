@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TAppState, TGoalView, TPriceCheck } from "@/contract/schemas";
 import { NEVER_MONTH, projectMonth } from "@/engine/dates";
 import { dateTime, inr, month, monthIndex, monthsBetween, shortUrl } from "./format";
+import { BigMoney } from "./motion";
 import { goalEmoji, Ring } from "./pictures";
 import { AnimatedMonth, Badge, Empty } from "./ui";
 
@@ -24,7 +25,7 @@ function PriceLine({ goal, price }: { goal: TGoalView; price: TPriceCheck | null
     const pct = Math.round((goal.earmarked / price.price) * 1000) / 10;
     return (
       <div className="goal-price">
-        <Ring percent={pct} size={60} stroke={7} track="var(--canvas)" center={<span className="ring-small">{Math.round(pct)}%</span>} label={`${pct}% saved at today's price`} />
+        <Ring percent={pct} size={60} stroke={7} center={<span className="ring-small">{Math.round(pct)}%</span>} label={`${pct}% saved at today's price`} />
         <p>
           <b>{pct}%</b> at today&apos;s <b>{inr(price.price)}</b>
           {price.cached ? <> <Badge>Cached</Badge></> : null}
@@ -74,17 +75,22 @@ export function GoalsTab({ state, prices, onSuggest }: { state: TAppState; price
   if (goals.length === 0) return <div className="view"><Empty title="No goals yet">Say one: “Goa trip by June, 40 thousand.”</Empty></div>;
 
   return (
-    <section aria-label="Goals" className="view goals-screen">
-      <div className="row-head"><h1 className="page-title">Your goals</h1></div>
+    <section aria-label="Goals">
+      <header className="glass glass-head page-head">
+        <h1 className="page-title">Your goals</h1>
+        <p className="page-figure"><BigMoney value={goals.reduce((sum, g) => sum + g.earmarked, 0)} fromZero /></p>
+        <p className="muted small">saved across {goals.length} {goals.length === 1 ? "goal" : "goals"}</p>
+      </header>
+      <div className="view goals-screen">
       <ul className="goal-cards">
         {goals.map((g, i) => {
           const late = lateness(g);
           const pct = g.target > 0 ? Math.min(100, Math.round((g.earmarked / g.target) * 100)) : 0;
           const price = prices[g.id] ?? g.price ?? null;
           return (
-            <li key={g.id} className="goal-card" style={{ animationDelay: `${i * 70}ms` }}>
+            <li key={g.id} className="goal-card glass" style={{ animationDelay: `${i * 70}ms` }}>
               <div className="goal-card-top">
-                <Ring percent={pct} emoji={goalEmoji(g.name, g.type)} size={104} stroke={10} track="var(--canvas)" label={`${g.name}: ${pct}% saved`} />
+                <Ring percent={pct} emoji={goalEmoji(g.name, g.type)} size={104} stroke={10} label={`${g.name}: ${pct}% saved`} />
                 <div className="goal-card-text">
                   <h3>{g.name}</h3>
                   <p className="goal-pct">{pct}% saved</p>
@@ -104,6 +110,7 @@ export function GoalsTab({ state, prices, onSuggest }: { state: TAppState; price
         })}
       </ul>
       <button type="button" className="chip chip-add" onClick={() => onSuggest("New goal: Bike by December 2027, 90 thousand")}><span aria-hidden="true">➕</span> Say a new goal</button>
+      </div>
     </section>
   );
 }

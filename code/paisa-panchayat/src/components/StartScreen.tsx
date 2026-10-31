@@ -39,9 +39,14 @@ export function StartScreen({ state, name, entries, working, noticeCount, huddle
 
   return (
     <div className="start">
+      {talking ? (
+        <div className="glass glass-head thread-head">
+          <Why reason={leftReason(state)}>{inr(Math.abs(left))} {left < 0 ? "over" : "left"} in {month(state.simMonth)}</Why>
+        </div>
+      ) : null}
       <div className="start-scroll">
         {!talking ? (
-          <div className="greeting">
+          <div className="greeting glass">
             <span className="coin" aria-hidden="true">₹</span>
             <h1>What can I help with, {firstName(name)}?</h1>
             <p className="greeting-stat">

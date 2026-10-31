@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   icons: { icon: "/icon.svg" },
 };
 
-export const viewport: Viewport = { themeColor: "#0D0C22", colorScheme: "light", viewportFit: "cover" };
+export const viewport: Viewport = { themeColor: "#FFFFFF", colorScheme: "light", viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

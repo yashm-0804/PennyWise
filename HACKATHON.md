@@ -1,6 +1,6 @@
 # Agentic AI Hackathon (Product Space × Wispr Flow): tracker
 
-Last updated: 2026-10-31 22:04 IST by /hack-iterate
+Last updated: 2026-10-31 22:38 IST by /hack-iterate
 
 ## Event
 
@@ -57,7 +57,7 @@ Target weighted score: 8.0 / 10
 
 ## Phase status
 
-Hours left at the last update: 1.9 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
+Hours left at the last update: 1.3 · Ship buffer: 4 h (under-24h rule; starts 2026-10-31 19:59 IST) · Feature freeze: 2026-10-31 17:59 IST (6 h before the deadline)
 
 Scaling: under 24 hours. 2–3 ideas, shortlist 1–2, test rounds 1 and 6, skip HTML pages.
 
@@ -102,6 +102,7 @@ Status values: not started · in progress · awaiting review · done
 | 2026-10-31 | App opens on a Gemini-style Home: greeting, one box for speech and questions, bubbles to each section. Adds a Profile and a prototype sign-in (a name on the device, no password or server account). Panchayat is now Huddle and Alerts is now Nudges | The user asked for this page and for renames without giving names; Claude picked Huddle and Nudges for the user to veto | User |
 | 2026-10-31 | No speech code in the app. A plain text box takes Wispr Flow dictation; typed input also works | Meets "main input is natural speech captured through Wispr Flow" without building speech features | User |
 | 2026-10-31 | No "CA" or "Chartered Accountant" in the product's name or persona; live SMS and email fetching are out; synthetic data only | Protected-designation risk, build time, and Gemini data terms | User, via I-5 |
+| 2026-10-31 22:38 IST | Mobile frontend restyled as glass panels over black, from the user's Payoneer mobile concept references. Home is now the larger centre ring in the bottom nav. Pink accent kept instead of the references' red | The user asked for the glass panel look and a centred, larger Home icon. Pink is the accent from their own palette, and it keeps the brand consistent | The user, with the accent call by Claude |
 
 ## Open questions
 

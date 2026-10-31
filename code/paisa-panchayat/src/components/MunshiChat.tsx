@@ -37,9 +37,9 @@ export function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState 
           {goal && res.price && planned !== null && today !== null ? (
             <>
               <div className="ring-pair">
-                <figure><Ring percent={planned} size={96} stroke={10} track="var(--canvas)" center={<span className="ring-small">{planned}%</span>} label={`${planned}% of the planned price`} /><figcaption>Planned {inr(goal.target)}</figcaption></figure>
+                <figure><Ring percent={planned} size={96} stroke={10} center={<span className="ring-small">{planned}%</span>} label={`${planned}% of the planned price`} /><figcaption>Planned {inr(goal.target)}</figcaption></figure>
                 <span className="ring-arrow" aria-hidden="true">→</span>
-                <figure><Ring percent={today} size={96} stroke={10} track="var(--canvas)" center={<span className="ring-small">{today}%</span>} label={`${today}% of today's price`} /><figcaption>Today {inr(res.price.price)}</figcaption></figure>
+                <figure><Ring percent={today} size={96} stroke={10} center={<span className="ring-small">{today}%</span>} label={`${today}% of today's price`} /><figcaption>Today {inr(res.price.price)}</figcaption></figure>
               </div>
               <p className="muted small">
                 {res.price.label} · {res.price.variant} · {dateTime(res.price.checkedAt)}
@@ -100,7 +100,7 @@ export function MunshiChat({ state, entries, working, busy, onSend, onAsk, onClo
     <div className="chat-layer">
       <button type="button" className="chat-scrim" aria-label="Close Buggy" tabIndex={-1} onClick={onClose} />
       <section className="chat-window" role="dialog" aria-label="Chat with Buggy">
-        <header className="chat-head">
+        <header className="chat-head glass">
           <Avatar emoji="🐞" size={44} tint="goal" />
           <div className="chat-head-text">
             <b>Buggy</b>

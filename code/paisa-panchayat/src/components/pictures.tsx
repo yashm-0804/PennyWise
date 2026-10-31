@@ -83,7 +83,7 @@ export function Ring({ percent, color = "var(--accent)", emoji, size = 120, stro
   return (
     <span className="progress-ring" role="img" aria-label={label} style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden="true">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track ?? "var(--tint)"} strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={track ?? "var(--ring-track)"} strokeWidth={stroke} />
         <circle
           className="ring-fill"
           cx={size / 2}

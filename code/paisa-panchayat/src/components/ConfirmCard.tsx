@@ -137,7 +137,7 @@ export function ConfirmCard({ reply, saving, onConfirm, onDiscard }: {
         <span className="muted small">{blocked ? "Fix or remove the marked rows to continue." : "Nothing is saved until you confirm."}</span>
         <span className="row-gap">
           <button type="button" className="btn btn-quiet" onClick={onDiscard}>Discard</button>
-          <button type="button" className="btn btn-primary" disabled={!canConfirm(items)} onClick={() => onConfirm(items)}>
+          <button type="button" className="btn btn-accent" disabled={!canConfirm(items)} onClick={() => onConfirm(items)}>
             Confirm {items.length > 0 ? `${items.length} ${items.length === 1 ? "entry" : "entries"}` : ""}
           </button>
         </span>

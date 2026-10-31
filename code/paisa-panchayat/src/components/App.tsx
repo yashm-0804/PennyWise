@@ -22,10 +22,11 @@ import { StartScreen, type OrbTarget } from "./StartScreen";
 import { Badge, ErrorBand, Working } from "./ui";
 
 type Tab = "start" | "khata" | "goals" | "panchayat" | "notices" | "profile";
+/** Home sits in the middle and larger, as the ring does in the references. */
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "start", label: "Home", icon: <HomeIcon /> },
   { id: "khata", label: "Ledger", icon: <LedgerIcon /> },
   { id: "goals", label: "Goals", icon: <GoalIcon /> },
+  { id: "start", label: "Home", icon: <HomeIcon /> },
   { id: "panchayat", label: "Huddle", icon: <PanchayatIcon /> },
   { id: "notices", label: "Nudges", icon: <BellIcon /> },
 ];
@@ -87,6 +88,7 @@ export function App() {
   const [importResult, setImportResult] = useState<TImportResponse | null>(null);
 
   const box = useRef<HTMLTextAreaElement>(null);
+  const scroller = useRef<HTMLElement>(null);
   const chatBox = useRef<HTMLTextAreaElement>(null);
   const chatOpen = useRef(false);
   useEffect(() => { chatOpen.current = munshiOpen; }, [munshiOpen]);
@@ -217,7 +219,7 @@ export function App() {
 
   /** Puts a suggestion in the box for the user to edit or send. */
   const suggest = (line: string) => {
-    setText(line);
+    if (line) setText(line);
     box.current?.focus({ preventScroll: true });
   };
 
@@ -355,6 +357,11 @@ export function App() {
   const rulingMode = Boolean(panchayat && !panchayat.applied && tab === "panchayat");
   const huddleOpen = Boolean(panchayat && !panchayat.applied);
   const onStart = tab === "start";
+  const viewKey = confirm && !onStart ? "confirm" : tab;
+
+  // Every section opens at its top. The scroller is shared, so it would otherwise keep the last section's position.
+  useEffect(() => { scroller.current?.scrollTo({ top: 0, behavior: "instant" }); }, [viewKey]);
+
   const tabIndex = TABS.findIndex((t) => t.id === tab);
   const simMonths = simulatedMonths(state, simRun);
   const noticeCount = state?.notices.length ?? 0;
@@ -417,6 +424,8 @@ export function App() {
             onTreatment={setTreatment}
             onSuggest={suggest}
             onGoals={() => setTab("goals")}
+            onNudges={() => setTab("notices")}
+            onImport={() => setPlusOpen(true)}
             resetControl={<ResetControl busy={busy !== null} onReset={reset} />}
           />
         );
@@ -439,7 +448,7 @@ export function App() {
           );
         }
         return (
-          <div className="panchayat-empty view">
+          <div className="panchayat-empty glass glass-head">
             <span className="panchayat-empty-icon" aria-hidden="true">⚖️</span>
             <h1 className="page-title">Your goals are at peace</h1>
             <p className="muted">When a big expense comes up, they gather here and argue it out. You make the final call.</p>
@@ -474,6 +483,7 @@ export function App() {
 
   return (
     <div className={`app ${onStart ? "is-start" : ""} ${onStart && typing ? "is-typing" : ""}`}>
+      <main ref={scroller} className="main">
       <header className="top">
         <div className="top-inner">
           <span className="brand"><span className="brand-mark" aria-hidden="true">₹</span> PennyWise</span>
@@ -483,8 +493,6 @@ export function App() {
           </span>
         </div>
       </header>
-
-      <main className="main">
         {failure || info || showSaved ? (
           <div className="banners">
             {failure ? <ErrorBand message={failure.message} onRetry={failure.retry} onDismiss={() => setFailure(null)} /> : null}
@@ -504,7 +512,7 @@ export function App() {
             ) : null}
           </div>
         ) : null}
-        <div key={confirm && !onStart ? "confirm" : tab} className="view-anim">{body()}</div>
+        <div key={viewKey} className="view-anim">{body()}</div>
       </main>
 
       {onStart && confirm ? (
@@ -587,7 +595,7 @@ export function App() {
                   type="button"
                   role="tab"
                   aria-selected={tab === t.id && !confirm}
-                  className="tab"
+                  className={t.id === "start" ? "tab tab-home" : "tab"}
                   onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
                 >
                   <span className="tab-icon">{t.icon}</span>

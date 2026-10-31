@@ -21,15 +21,15 @@ export function ProfileTab({ state, name, onSuggest, onAskBuggy, resetControl }:
 }) {
   const p = state.profile;
   return (
-    <section className="view profile" aria-label="Your profile">
-      <div className="profile-head">
+    <section aria-label="Your profile">
+      <header className="glass glass-head page-head profile-head">
         <span className="profile-avatar" aria-hidden="true">{name.charAt(0).toUpperCase()}</span>
         <div>
           <h1 className="page-title">{name}</h1>
           <p className="muted small">Prototype account on this device</p>
         </div>
-      </div>
-
+      </header>
+      <div className="view profile">
       <div>
         <div className="row-head"><h2>Your money profile</h2></div>
         <ul className="people">
@@ -58,6 +58,7 @@ export function ProfileTab({ state, name, onSuggest, onAskBuggy, resetControl }:
       <div className="profile-actions">
         <button type="button" className="btn btn-quiet" onClick={signOut}>Sign out</button>
         <span className="home-foot">{resetControl}</span>
+      </div>
       </div>
     </section>
   );

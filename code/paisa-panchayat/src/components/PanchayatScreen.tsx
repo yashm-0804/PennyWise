@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { TAppState, TPanchayat, TRulingResponse, TVoice } from "@/contract/schemas";
 import { actionLabel, chosenPlanId, goalNames, opNotes } from "./flow";
 import { deltaLabel, inr, month, monthsBetween } from "./format";
-import { Money } from "./motion";
+import { WaveIcon } from "./icons";
+import { BigMoney } from "./motion";
 import { Avatar, goalEmoji, rowEmoji } from "./pictures";
 import { AnimatedMonth, Elapsed, Empty, SourceBadge } from "./ui";
 
@@ -133,7 +134,7 @@ function RulingPanel({ open, state, names, busy, onApply, onClose }: {
   const goals = state?.goals ?? [];
 
   return (
-    <div className={`ruling ${open.applied ? "is-applied" : ""}`}>
+    <div className={`ruling glass ${open.applied ? "is-applied" : ""}`}>
       <p className="caption ruling-kicker">{open.applied ? (whatIf ? "Decision noted" : "Ruling applied") : "Your ruling"}</p>
       <p className="ruling-quote">“{open.ruling!.text}”</p>
 
@@ -173,8 +174,8 @@ function RulingPanel({ open, state, names, busy, onApply, onClose }: {
         <button type="button" className="btn btn-quiet btn-wide" onClick={onClose}>{whatIf ? "Done" : "See my goals"}</button>
       ) : (
         <>
-          <button type="button" className="btn btn-primary btn-wide btn-big" disabled={!canApply} onClick={onApply} data-testid="apply-ruling">
-            {busy ? <>Applying <Elapsed /></> : whatIf ? "Note this decision" : "Apply ruling"}
+          <button type="button" className="btn btn-accent btn-wide btn-big" disabled={!canApply} onClick={onApply} data-testid="apply-ruling">
+            {busy ? <>Applying <Elapsed /></> : <><WaveIcon /> {whatIf ? "Note this decision" : "Apply ruling"}</>}
           </button>
           <p className="muted small center">Not right? Say it again or pick another plan.</p>
         </>
@@ -188,12 +189,10 @@ export function PanchayatConvening({ text, state }: { text: string; state: TAppS
   const goals = (state?.goals ?? []).slice(0, 4);
   return (
     <section className="panchayat convening" aria-busy="true" role="status" aria-live="polite">
-      <div className="band band-accent">
-        <div className="band-inner trigger">
-          <div className="trigger-main">
-            <p className="caption">Calling your goals in <Elapsed /></p>
-            <p className="trigger-quote">“{text}”</p>
-          </div>
+      <div className="glass glass-head">
+        <div className="money-card trigger-card">
+          <p className="money-card-kicker">Calling your goals in <Elapsed /></p>
+          <p className="trigger-quote">“{text}”</p>
         </div>
       </div>
       <div className="view">
@@ -228,37 +227,46 @@ export function PanchayatScreen({ open, state, rulingBusy, applyBusy, onApply, o
   const activePlanId = peek ?? (open.ruling ? chosenPlanId(open.ruling.res.ops) : null);
   const activePlan = plans.find((p) => p.id === activePlanId);
   const touched = new Set(activePlan?.impacts.map((i) => i.goalId));
+  const rulingSpot = useRef<HTMLDivElement>(null);
+
+  // The ruling card opens above the plans. Without this, choosing a plan further down looks like nothing happened, and "Apply" can sit under the dock.
+  useEffect(() => {
+    if (rulingBusy || open.ruling) rulingSpot.current?.scrollIntoView({ block: "nearest" });
+  }, [rulingBusy, open.ruling, open.applied]);
 
   return (
     <section className="panchayat" aria-label="Huddle" data-panchayat={id}>
-      <header className="band band-accent">
-        <div className="band-inner trigger">
-          <span className="trigger-icon" aria-hidden="true">{trigger.kind === "whatif" ? "🤔" : triggerEmoji(trigger.label)}</span>
-          <div className="trigger-main">
-            <p className="caption">{trigger.kind === "whatif" ? "What if…" : "Big expense"}</p>
-            <h1 className="trigger-title">{trigger.label} <Money value={trigger.amount} fromZero /></h1>
-            <p className="trigger-quote">“{trigger.quote}”</p>
+      <header className="glass glass-head">
+        <div className="money-card trigger-card">
+          <div className="money-card-top">
+            <span className="money-card-kicker">{trigger.kind === "whatif" ? "What if…" : "Big expense"}</span>
+            <span className="trigger-emoji" aria-hidden="true">{trigger.kind === "whatif" ? "🤔" : triggerEmoji(trigger.label)}</span>
           </div>
-          <div className="trigger-side">
-            <p className={open.applied ? "whatif is-applied" : "whatif"}>
-              {open.applied ? (trigger.kind === "whatif" ? "Noted. A what-if moves no money." : "✓ Ruling saved") : "What-if: nothing saved yet"}
-            </p>
-            <button type="button" className="text-link" onClick={onClose}>{open.applied ? "Close" : "Close without ruling"}</button>
-          </div>
+          <h1 className="trigger-title">{trigger.label}</h1>
+          <p className="money-card-amount"><BigMoney value={trigger.amount} fromZero /></p>
+          <p className="trigger-quote">“{trigger.quote}”</p>
+        </div>
+        <div className="trigger-side">
+          <p className={open.applied ? "whatif is-applied" : "whatif"}>
+            {open.applied ? (trigger.kind === "whatif" ? "Noted. A what-if moves no money." : "✓ Ruling saved") : "What-if: nothing saved yet"}
+          </p>
+          <button type="button" className="text-link" onClick={onClose}>{open.applied ? "Close" : "Close without ruling"}</button>
         </div>
       </header>
 
       <div className="view panchayat-body">
         <div className="panchayat-talk">
-          {rulingBusy ? (
-            <div role="status" aria-live="polite" className="ruling">
-              <p className="caption ruling-kicker">Reading your ruling <Elapsed /></p>
-              <p className="ruling-quote">“{rulingBusy}”</p>
-              <span className="typing"><i /><i /><i /></span>
-            </div>
-          ) : hasRuling ? (
-            <RulingPanel open={open} state={state} names={names} busy={applyBusy} onApply={onApply} onClose={onClose} />
-          ) : null}
+          <div ref={rulingSpot} className="ruling-spot">
+            {rulingBusy ? (
+              <div role="status" aria-live="polite" className="ruling glass">
+                <p className="caption ruling-kicker">Reading your ruling <Elapsed /></p>
+                <p className="ruling-quote">“{rulingBusy}”</p>
+                <span className="typing"><i /><i /><i /></span>
+              </div>
+            ) : hasRuling ? (
+              <RulingPanel open={open} state={state} names={names} busy={applyBusy} onApply={onApply} onClose={onClose} />
+            ) : null}
+          </div>
           {voices.length > 0 ? (
             <>
               <h2>Your goals have a say</h2>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { TAppState } from "@/contract/schemas";
 import { humanize, inr, month, shortDate } from "./format";
-import { Money } from "./motion";
+import { BellIcon, GoalIcon, PlusIcon, ReceiptIcon } from "./icons";
+import { BigMoney, Money } from "./motion";
 import { Avatar, goalEmoji, Initial, Ring, rowEmoji } from "./pictures";
 import { cashReason, emiReason, fixedReason, goalReason, leftReason, oweReason, owedReason, ringReason, rowReason, safetyReason, spareReason, spentReason } from "./reasons";
 import { Badge, Empty } from "./ui";
@@ -86,7 +87,98 @@ function Activity({ row, fresh, busy, index, onUndo, onTreatment }: {
   );
 }
 
-export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest, onGoals, resetControl }: {
+const RAIL_GAP = 12;
+
+/** The balance cards from the references: swipe them, or tap a chip to bring one forward. */
+function MoneyCards({ state }: { state: TAppState }) {
+  const [active, setActive] = useState(0);
+  const rail = useRef<HTMLDivElement>(null);
+  const p = state.profile;
+  const left = p.monthlyIncome - p.monthSpend;
+  const leftPct = p.monthlyIncome > 0 ? (Math.max(0, left) / p.monthlyIncome) * 100 : 0;
+  const cards = [
+    {
+      chip: "Month",
+      kicker: `${left < 0 ? "Over" : "Left"} in ${month(state.simMonth)}`,
+      value: left,
+      reason: leftReason(state),
+      sub: <Why reason={spentReason(state)}>Spent {inr(p.monthSpend)} of {inr(p.monthlyIncome)}</Why>,
+      side: (
+        <Why reason={ringReason(state)} className="why-plain">
+          <Ring percent={leftPct} size={64} stroke={7} center={<span className="ring-small">{Math.round(leftPct)}%</span>} label={`${Math.round(leftPct)}% of this month's income is left`} />
+        </Why>
+      ),
+    },
+    {
+      chip: "Spare",
+      kicker: "Spare a month",
+      value: p.monthlySurplus,
+      reason: spareReason(state),
+      sub: <Why reason={fixedReason(state)}>After {inr(p.fixedCosts)} of fixed costs</Why>,
+      side: <span className="card-emoji" aria-hidden="true">🌱</span>,
+    },
+    {
+      chip: "Safety",
+      kicker: "Safety fund",
+      value: p.emergencyFund,
+      reason: safetyReason(state),
+      sub: <>Your Emergency Fund</>,
+      side: <span className="card-emoji" aria-hidden="true">🛟</span>,
+    },
+    {
+      chip: "Cash",
+      kicker: "Cash in hand",
+      value: state.cash.balance,
+      reason: cashReason(state),
+      sub: <>{state.cash.unexplained > 0 ? `${inr(state.cash.unexplained)} not explained yet` : "All explained"}</>,
+      side: <span className="card-emoji" aria-hidden="true">💵</span>,
+    },
+  ];
+
+  const stepWidth = () => (rail.current?.children[0] as HTMLElement | undefined)?.offsetWidth ?? 0;
+
+  return (
+    <>
+      <div
+        ref={rail}
+        className="cards-rail"
+        onScroll={(e) => {
+          const step = stepWidth() + RAIL_GAP;
+          if (step > RAIL_GAP) setActive(Math.round(e.currentTarget.scrollLeft / step));
+        }}
+      >
+        {cards.map((c, i) => (
+          <article key={c.chip} className={`money-card ${c.value < 0 ? "is-over" : ""}`}>
+            <div className="money-card-top">
+              <span className="money-card-brand"><span className="ring-mark" aria-hidden="true" /> PennyWise</span>
+              <span className="money-card-kicker">{c.kicker}</span>
+            </div>
+            <p className="money-card-amount"><Why reason={c.reason}><BigMoney value={c.value} fromZero={i === 0} /></Why></p>
+            <div className="money-card-bottom">
+              <span className="money-card-sub">{c.sub}</span>
+              {c.side}
+            </div>
+          </article>
+        ))}
+      </div>
+      <div className="card-chips" role="group" aria-label="Choose a card">
+        {cards.map((c, i) => (
+          <button
+            type="button"
+            key={c.chip}
+            className="filter"
+            aria-pressed={active === i}
+            onClick={() => { setActive(i); rail.current?.scrollTo({ left: i * (stepWidth() + RAIL_GAP), behavior: "smooth" }); }}
+          >
+            {c.chip}
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest, onGoals, onNudges, onImport, resetControl }: {
   state: TAppState;
   freshIds: string[];
   busy: boolean;
@@ -94,6 +186,8 @@ export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest
   onTreatment: (eventId: string, t: "transfer" | "spend") => void;
   onSuggest: (text: string) => void;
   onGoals: () => void;
+  onNudges: () => void;
+  onImport: () => void;
   resetControl: React.ReactNode;
 }) {
   const [showAll, setShowAll] = useState(false);
@@ -103,36 +197,17 @@ export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest
     .filter((r) => filter === "all" || (filter === "spent" ? r.countsAsSpend : !r.countsAsSpend));
   const shown = showAll ? rows : rows.slice(0, FIRST_ROWS);
   const people = state.people.filter((p) => p.owesMe !== 0 || p.iOwe !== 0);
-  const p = state.profile;
-  const left = p.monthlyIncome - p.monthSpend;
-  const leftPct = p.monthlyIncome > 0 ? (Math.max(0, left) / p.monthlyIncome) * 100 : 0;
+  const latest = [...state.rows].filter((r) => !r.reversed).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6);
 
   return (
     <div className="home">
-      <section className="band band-ink" aria-label={`Money ${left < 0 ? "over" : "left"} in ${month(state.simMonth)}`}>
-        <div className="band-inner hero">
-          <div className="hero-top">
-            <div className="hero-text">
-              <p className="caption hero-kicker">{left < 0 ? "Over" : "Left"} in {month(state.simMonth)}</p>
-              <p className={`hero-amount ${left < 0 ? "is-over" : ""}`}><Why reason={leftReason(state)}><Money value={left} fromZero /></Why></p>
-              <p className="hero-sub"><Why reason={spentReason(state)}>Spent {inr(p.monthSpend)} of {inr(p.monthlyIncome)}</Why></p>
-            </div>
-            <Why reason={ringReason(state)} className="why-plain">
-              <Ring
-                percent={leftPct}
-                size={104}
-                stroke={10}
-                track="var(--accent-5)"
-                center={<span className="hero-ring-pct">{Math.round(leftPct)}%</span>}
-                label={`${Math.round(leftPct)}% of this month's income is left`}
-              />
-            </Why>
-          </div>
-          <ul className="tiles" aria-label="Your money profile">
-            <li className="tile"><span className="tile-icon" aria-hidden="true">🏠</span><span className="tile-label">Fixed costs</span><Why reason={fixedReason(state)}><b><Money value={p.fixedCosts} /></b></Why></li>
-            <li className="tile"><span className="tile-icon" aria-hidden="true">🛟</span><span className="tile-label">Safety fund</span><Why reason={safetyReason(state)}><b><Money value={p.emergencyFund} /></b></Why></li>
-            <li className="tile"><span className="tile-icon" aria-hidden="true">🌱</span><span className="tile-label">Spare a month</span><Why reason={spareReason(state)}><b><Money value={p.monthlySurplus} /></b></Why></li>
-          </ul>
+      <section className="glass glass-head" aria-label="Your money">
+        <MoneyCards state={state} />
+        <div className="squares">
+          <button type="button" className="square" onClick={() => onSuggest("")}><PlusIcon /><span>Add</span></button>
+          <button type="button" className="square" onClick={onImport}><ReceiptIcon /><span>Import</span></button>
+          <button type="button" className="square" onClick={onGoals}><GoalIcon /><span>Goals</span></button>
+          <button type="button" className="square" onClick={onNudges}><BellIcon /><span>Nudges</span></button>
         </div>
       </section>
 
@@ -145,13 +220,26 @@ export function KhataTab({ state, freshIds, busy, onUndo, onTreatment, onSuggest
               return (
                 <div key={g.id} className="goal-chip" style={{ animationDelay: `${i * 70}ms` }}>
                   <button type="button" className="goal-chip-open" onClick={onGoals}>
-                    <Ring percent={pct} emoji={goalEmoji(g.name, g.type)} size={84} stroke={8} track="var(--canvas)" label={`${g.name}: ${Math.round(pct)}% saved`} />
+                    <Ring percent={pct} emoji={goalEmoji(g.name, g.type)} size={84} stroke={8} label={`${g.name}: ${Math.round(pct)}% saved`} />
                     <b>{g.name}</b>
                   </button>
                   <Why reason={goalReason(g)}><span className="goal-chip-num">{Math.round(pct)}% · {month(g.projectedMonth)}</span></Why>
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        <section aria-label="Latest">
+          <div className="row-head"><h2>Latest</h2></div>
+          <div className="latest-rail">
+            {latest.map((r, i) => (
+              <article key={r.eventId} className={`latest-card ${r.countsAsSpend ? "" : "is-quiet"}`} style={{ animationDelay: `${i * 60}ms` }}>
+                <div className="latest-top"><span className="latest-name">{r.label}</span><span className="latest-emoji" aria-hidden="true">{rowEmoji(r)}</span></div>
+                <Why reason={rowReason(r)} className="latest-amount">{inr(r.amount)}</Why>
+                <span className="latest-date">{shortDate(r.date)}</span>
+              </article>
+            ))}
           </div>
         </section>
 

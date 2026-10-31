@@ -121,3 +121,15 @@ Rebuilt all screens as a friendly app: home with a money ring and goal rings, pl
 **Not re-checked since the redesign:** import tiles with real files, row undo, rule undo, the withdrawal toggle, and restart persistence through the new screens. A blind judge hasn't seen it. This redesign also changes D-1, D-2, D-3 and D-6, so those bugs need re-testing before they're closed.
 
 ---
+
+## Redesign 2026-10-31 22:38 IST (user request, not scored)
+
+Restyled every mobile screen from the user's three Payoneer mobile concept references: frosted glass panels with a large bottom radius over a black lower section, a dark smoky balance card with light, wide numerals, white squircle buttons, translucent chips and small dark cards for recent entries. Home is now the larger centre ring in the bottom nav, and the ₹ coin on the Home page is larger. The pink accent stays in place of the references' red. No charts were added. The reference's category bar card was left out on purpose.
+
+**Also fixed along the way:** every section now opens at its top, because the shared scroller kept the last section's position. The ruling card scrolls into view by itself, so "Apply ruling" isn't left under the dock or above the fold after choosing a plan. "Add" on the Ledger no longer clears text already in the box.
+
+**Checked in fake mode:** 480 tests, type check, lint with no errors, production build. Every screen walked at 390 × 844 and 360 × 640 with no sideways overflow or console errors. The hero flow was run with the API held back at 390 × 844 and 390 × 700, which covers the loading screens, the spoken ruling, choosing a plan, applying it and a what-if. A reason opens on a balance card and fits the screen. The chips bring their card forward.
+
+**Not re-checked:** real Wispr Flow typing inside the phone frame, real file uploads through "+", row undo and rule undo through the new screens. A blind judge hasn't seen it.
+
+---

@@ -32,6 +32,12 @@ export function Money({ value, fromZero = false }: { value: number; fromZero?: b
   return <span className="money">{inr(shown)}</span>;
 }
 
+/** The large balance style from the references: a small raised currency beside light, wide numerals. */
+export function BigMoney({ value, fromZero = false }: { value: number; fromZero?: boolean }) {
+  const shown = useCountUp(value, { fromZero });
+  return <span className="big-money">{shown < 0 ? "−" : ""}<sup>₹</sup>{inr(Math.abs(shown)).replace("₹", "")}</span>;
+}
+
 /** True for a moment after each keystroke, which is how Wispr Flow's typing reaches the page. */
 export function useTypingPulse(ms = 700): [boolean, () => void] {
   const [active, setActive] = useState(false);
