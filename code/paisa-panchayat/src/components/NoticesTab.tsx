@@ -81,7 +81,7 @@ function Review({ review, simulated }: { review: TMonthlyReview; simulated: bool
   );
 }
 
-function ImportControls({ busy, result, onImport }: {
+export function ImportControls({ busy, result, onImport }: {
   busy: ImportArgs["kind"] | null;
   result: TImportResponse | null;
   onImport: (a: ImportArgs) => void;
@@ -185,9 +185,9 @@ export function NoticesTab({ state, nextMonth, simMonths, movedFrom, nextBusy, i
         </button>
         {nextMonth && !nextBusy ? <p className="center"><SimulatedBadge /> {month(nextMonth.month)} imported</p> : null}
 
-        <div className="row-head"><h1 className="page-title">Alerts</h1></div>
+        <div className="row-head"><h1 className="page-title">Nudges</h1></div>
         {notices.length === 0 ? (
-          <Empty title="All quiet 😌">Alerts and nudges land here after an import.</Empty>
+          <Empty title="All quiet 😌">Nudges land here after an import.</Empty>
         ) : (
           <ul className="notice-list">
             {notices.map((n) => (

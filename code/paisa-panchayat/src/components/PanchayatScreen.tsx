@@ -230,7 +230,7 @@ export function PanchayatScreen({ open, state, rulingBusy, applyBusy, onApply, o
   const touched = new Set(activePlan?.impacts.map((i) => i.goalId));
 
   return (
-    <section className="panchayat" aria-label="Panchayat" data-panchayat={id}>
+    <section className="panchayat" aria-label="Huddle" data-panchayat={id}>
       <header className="band band-accent">
         <div className="band-inner trigger">
           <span className="trigger-icon" aria-hidden="true">{trigger.kind === "whatif" ? "🤔" : triggerEmoji(trigger.label)}</span>

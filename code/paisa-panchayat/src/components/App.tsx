@@ -5,7 +5,8 @@ import type {
   TAppState, TCheckedItem, TDictateResponse, TImportResponse, TMunshiResponse, TNextMonthResponse, TPanchayat, TPriceCheck, TRulingResponse,
 } from "@/contract/schemas";
 import { ApiError, fileToBase64, getState, post } from "./api";
-import { BellIcon, ChatIcon, GoalIcon, HomeIcon, PanchayatIcon, RulingIcon, SendIcon } from "./icons";
+import { useAccountName } from "./account";
+import { BellIcon, ChatIcon, CloseIcon, GoalIcon, HomeIcon, LedgerIcon, PanchayatIcon, PlusIcon, RulingIcon, SendIcon } from "./icons";
 import { useTypingPulse, Wave } from "./motion";
 import { ConfirmCard } from "./ConfirmCard";
 import { looksLikeQuestion } from "@/lib/question";
@@ -13,16 +14,29 @@ import { newEventIds, simulatedMonths, stepForRoute } from "./flow";
 import { GoalsTab } from "./GoalsTab";
 import { KhataTab } from "./KhataTab";
 import { MunshiChat, type MunshiEntry } from "./MunshiChat";
-import { NoticesTab, type ImportArgs } from "./NoticesTab";
+import { ImportControls, NoticesTab, type ImportArgs } from "./NoticesTab";
 import { PanchayatConvening, PanchayatScreen, type OpenPanchayat } from "./PanchayatScreen";
-import { Badge, Empty, ErrorBand, Working } from "./ui";
+import { ProfileTab } from "./ProfileTab";
+import { SignIn } from "./SignIn";
+import { StartScreen, type OrbTarget } from "./StartScreen";
+import { Badge, ErrorBand, Working } from "./ui";
 
-type Tab = "khata" | "goals" | "panchayat" | "notices";
+type Tab = "start" | "khata" | "goals" | "panchayat" | "notices" | "profile";
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "khata", label: "Home", icon: <HomeIcon /> },
+  { id: "start", label: "Home", icon: <HomeIcon /> },
+  { id: "khata", label: "Ledger", icon: <LedgerIcon /> },
   { id: "goals", label: "Goals", icon: <GoalIcon /> },
-  { id: "panchayat", label: "Panchayat", icon: <PanchayatIcon /> },
-  { id: "notices", label: "Alerts", icon: <BellIcon /> },
+  { id: "panchayat", label: "Huddle", icon: <PanchayatIcon /> },
+  { id: "notices", label: "Nudges", icon: <BellIcon /> },
+];
+
+/** The front door's box cycles through things to say, so it teaches what it can do. */
+const START_HINTS = [
+  "Swiggy pe 450 gaye",
+  "Whom have I lent money to?",
+  "What if I cut dining by 30%?",
+  "Laptop died, new one is 70 thousand",
+  "Mera EMI kitna jaata hai?",
 ];
 
 type Busy =
@@ -50,7 +64,10 @@ function ResetControl({ busy, onReset }: { busy: boolean; onReset: () => void })
 export function App() {
   const [state, setState] = useState<TAppState | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("khata");
+  const name = useAccountName();
+  const [tab, setTab] = useState<Tab>("start");
+  const [plusOpen, setPlusOpen] = useState(false);
+  const [hint, setHint] = useState(0);
   const [busy, setBusy] = useState<Busy | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -117,6 +134,16 @@ export function App() {
     return () => document.removeEventListener("click", onClick);
   }, [focusBar]);
 
+  useEffect(() => {
+    if (name) focusBar();
+  }, [name, focusBar]);
+
+  useEffect(() => {
+    if (tab !== "start" || text) return;
+    const timer = setInterval(() => setHint((h) => (h + 1) % START_HINTS.length), 2800);
+    return () => clearInterval(timer);
+  }, [tab, text]);
+
   /** Every call goes through here, so busy, errors, retry and focus behave the same everywhere. */
   const run = useCallback((first: Busy, work: () => Promise<void>): Promise<void> => {
     const attempt = async () => {
@@ -147,7 +174,8 @@ export function App() {
 
   const askMunshi = async (raw: string) => {
     setBusy({ kind: "munshi", text: raw });
-    setMunshiOpen(true);
+    // The front door answers in place. Everywhere else, Buggy's window opens.
+    setMunshiOpen(tab !== "start");
     const res = await post<TMunshiResponse>("/api/munshi", { text: raw });
     munshiSeq.current += 1;
     setMunshi((m) => [{ id: munshiSeq.current, question: raw, res }, ...m]);
@@ -219,8 +247,7 @@ export function App() {
     const raw = text.trim();
     if (!raw || busy) return;
     setLastSent(raw);
-    setTab((t) => (panchayat && !panchayat.applied ? "panchayat" : t));
-    if (panchayat && !panchayat.applied) void ruleOn(raw, panchayat);
+    if (panchayat && !panchayat.applied && tab === "panchayat") void ruleOn(raw, panchayat);
     else if (looksLikeQuestion(raw)) {
       // A question goes straight to Buggy, without spending a router call.
       setText("");
@@ -243,7 +270,7 @@ export function App() {
         setPanchayat({ data: res.panchayat, ruling: null, applied: false });
         setTab("panchayat");
       } else {
-        setTab("khata");
+        setTab((t) => (t === "start" ? "start" : "khata"));
       }
     });
   };
@@ -285,7 +312,7 @@ export function App() {
   const closePanchayat = () => {
     const wasApplied = panchayat?.applied;
     setPanchayat(null);
-    setTab(wasApplied ? "goals" : "khata");
+    setTab(wasApplied ? "goals" : "start");
   };
 
   const runNextMonth = () => run({ kind: "next-month" }, async () => {
@@ -321,11 +348,14 @@ export function App() {
     setMovedFrom({});
     setImportResult(null);
     setLastSent(null);
-    setTab("khata");
+    setTab("start");
     await refresh();
   });
 
-  const rulingMode = Boolean(panchayat && !panchayat.applied);
+  const rulingMode = Boolean(panchayat && !panchayat.applied && tab === "panchayat");
+  const huddleOpen = Boolean(panchayat && !panchayat.applied);
+  const onStart = tab === "start";
+  const tabIndex = TABS.findIndex((t) => t.id === tab);
   const simMonths = simulatedMonths(state, simRun);
   const noticeCount = state?.notices.length ?? 0;
 
@@ -341,8 +371,8 @@ export function App() {
       }
       return <Working title="Opening your ledger" />;
     }
-    if (busy?.kind === "dictate") return <Working title="Reading what you said" quote={busy.text} detail="Every amount is checked against your words." />;
-    if (confirm) {
+    if (busy?.kind === "dictate" && !onStart) return <Working title="Reading what you said" quote={busy.text} detail="Every amount is checked against your words." />;
+    if (confirm && !onStart) {
       return (
         <ConfirmCard
           key={confirm.utteranceId}
@@ -354,6 +384,29 @@ export function App() {
       );
     }
     switch (tab) {
+      case "start":
+        return (
+          <StartScreen
+            state={state}
+            name={name ?? ""}
+            entries={munshi}
+            working={busy && (busy.kind === "munshi" || busy.kind === "dictate") ? busy.text : null}
+            noticeCount={noticeCount}
+            huddleOpen={huddleOpen}
+            onOpen={(target: OrbTarget) => { setSaved(null); setTab(target); }}
+            onStartOver={() => setMunshi([])}
+          />
+        );
+      case "profile":
+        return (
+          <ProfileTab
+            state={state}
+            name={name ?? ""}
+            onSuggest={suggest}
+            onAskBuggy={() => setMunshiOpen(true)}
+            resetControl={<ResetControl busy={busy !== null} onReset={reset} />}
+          />
+        );
       case "khata":
         return (
           <KhataTab
@@ -394,7 +447,7 @@ export function App() {
               <button type="button" className="chip" onClick={() => suggest("Laptop died, new one is 70 thousand, need it this month")}>💻 Laptop died, new one is 70 thousand</button>
               <button type="button" className="chip" onClick={() => suggest("What if I cut dining by 30%?")}>🤔 What if I cut dining by 30%?</button>
             </div>
-            {state.panchayats.length > 0 ? <p className="muted small">Past rulings are under Alerts.</p> : null}
+            {state.panchayats.length > 0 ? <p className="muted small">Past rulings are under Nudges.</p> : null}
           </div>
         );
       case "notices":
@@ -416,12 +469,18 @@ export function App() {
 
   const showSaved = saved && tab !== "panchayat" && !confirm;
 
+  if (name === undefined) return <div className="app is-start" />;
+  if (name === null) return <SignIn />;
+
   return (
-    <div className="app">
+    <div className={`app ${onStart ? "is-start" : ""} ${onStart && typing ? "is-typing" : ""}`}>
       <header className="top">
         <div className="top-inner">
           <span className="brand"><span className="brand-mark" aria-hidden="true">₹</span> PennyWise</span>
-          <Badge tone="onink">Synthetic data</Badge>
+          <span className="top-right">
+            <Badge tone="onink">Synthetic data</Badge>
+            <button type="button" className="top-avatar" aria-label="Your profile" onClick={() => { setConfirm(null); setTab("profile"); }}>{name.charAt(0).toUpperCase()}</button>
+          </span>
         </div>
       </header>
 
@@ -434,18 +493,44 @@ export function App() {
               <div className="saved-band" role="status">
                 <span><b>✓ Saved {saved.count} {saved.count === 1 ? "entry" : "entries"}.</b></span>
                 {saved.ids.length > 0 ? (
-                  <button type="button" className="btn btn-quiet btn-small" disabled={busy !== null} onClick={() => undoSaved(saved.ids)}>Undo</button>
+                  <span className="row-gap">
+                    {onStart ? <button type="button" className="btn btn-quiet btn-small" onClick={() => { setSaved(null); setTab("khata"); }}>See ledger</button> : null}
+                    <button type="button" className="btn btn-quiet btn-small" disabled={busy !== null} onClick={() => undoSaved(saved.ids)}>Undo</button>
+                  </span>
                 ) : (
-                  <span className="muted small">Undo any row on Home.</span>
+                  <span className="muted small">Undo any row in your ledger.</span>
                 )}
               </div>
             ) : null}
           </div>
         ) : null}
-        <div key={confirm ? "confirm" : tab} className="view-anim">{body()}</div>
+        <div key={confirm && !onStart ? "confirm" : tab} className="view-anim">{body()}</div>
       </main>
 
-      {state && !munshiOpen ? (
+      {onStart && confirm ? (
+        <div className="chat-layer">
+          <button type="button" className="chat-scrim" aria-label="Discard" tabIndex={-1} onClick={() => setConfirm(null)} />
+          <section className="sheet" aria-label="Confirm entries">
+            <ConfirmCard
+              key={confirm.utteranceId}
+              reply={confirm}
+              saving={busy?.kind === "confirm"}
+              onConfirm={confirmItems}
+              onDiscard={() => setConfirm(null)}
+            />
+          </section>
+        </div>
+      ) : null}
+      {plusOpen ? (
+        <div className="chat-layer">
+          <button type="button" className="chat-scrim" aria-label="Close" tabIndex={-1} onClick={() => setPlusOpen(false)} />
+          <section className="sheet sheet-pad" aria-label="Bring in your statements">
+            <button type="button" className="sheet-close" aria-label="Close" onClick={() => setPlusOpen(false)}><CloseIcon /></button>
+            <ImportControls busy={busy?.kind === "import" ? busy.what : null} result={importResult} onImport={runImport} />
+          </section>
+        </div>
+      ) : null}
+      {state && !munshiOpen && !onStart ? (
         <button type="button" className="munshi-fab" aria-label="Ask Buggy" onClick={() => setMunshiOpen(true)}>
           <ChatIcon />
           {busy?.kind === "munshi" ? <span className="fab-dot" /> : null}
@@ -467,7 +552,8 @@ export function App() {
 
       <div className="dock">
         <div className="dock-inner">
-          <form className={`bar ${rulingMode ? "is-ruling" : ""}`} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+          <form className={`bar ${rulingMode ? "is-ruling" : ""} ${onStart ? "is-start" : ""}`} onSubmit={(e) => { e.preventDefault(); submit(); }}>
+            {onStart ? <button type="button" className="bar-plus" aria-label="Bring in statements" onClick={() => setPlusOpen(true)}><PlusIcon /></button> : null}
             <Wave active={typing} />
             <label className="visually-hidden" htmlFor="dictation">{rulingMode ? "Your ruling" : "Say something"}</label>
             <textarea
@@ -476,7 +562,7 @@ export function App() {
               className="bar-input"
               rows={1}
               value={text}
-              placeholder={rulingMode ? RULING_TEXT : SAVED_TEXT}
+              placeholder={rulingMode ? RULING_TEXT : onStart ? `Bolo: ${START_HINTS[hint]}` : SAVED_TEXT}
               onChange={(e) => { setText(e.target.value); pingTyping(); }}
               onKeyDown={(e) => {
                 if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -489,25 +575,29 @@ export function App() {
               {busy && !["ledger", "import"].includes(busy.kind) ? "…" : rulingMode ? <RulingIcon /> : <SendIcon />}
             </button>
           </form>
-          <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>
-          <nav className="tabs" role="tablist" aria-label="Sections">
-            <span className="tab-glider" aria-hidden="true" style={{ transform: `translateX(${TABS.findIndex((t) => t.id === tab) * 100}%)`, width: `${100 / TABS.length}%` }}><i /></span>
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id && !confirm}
-                className="tab"
-                onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
-              >
-                <span className="tab-icon">{t.icon}</span>
-                <span className="tab-label">{t.label}</span>
-                {t.id === "panchayat" && rulingMode ? <span className="tab-dot" aria-label="open" /> : null}
-                {t.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
-              </button>
-            ))}
-          </nav>
+          {onStart
+            ? <p className="bar-hint">Speak with Wispr Flow, or type</p>
+            : <p className="bar-hint">Speak with Wispr Flow{lastSent ? <> · <span title={lastSent}>Sent: {lastSent}</span></> : null}</p>}
+          {!onStart ? (
+            <nav className="tabs" role="tablist" aria-label="Sections">
+              {tabIndex >= 0 ? <span className="tab-glider" aria-hidden="true" style={{ transform: `translateX(${tabIndex * 100}%)`, width: `${100 / TABS.length}%` }}><i /></span> : null}
+              {TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t.id && !confirm}
+                  className="tab"
+                  onClick={() => { setConfirm(null); setSaved(null); setTab(t.id); }}
+                >
+                  <span className="tab-icon">{t.icon}</span>
+                  <span className="tab-label">{t.label}</span>
+                  {t.id === "panchayat" && huddleOpen ? <span className="tab-dot" aria-label="open" /> : null}
+                  {t.id === "notices" && noticeCount > 0 ? <span className="tab-count">{noticeCount}</span> : null}
+                </button>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </div>
     </div>

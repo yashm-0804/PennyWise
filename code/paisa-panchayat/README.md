@@ -15,10 +15,11 @@ The app has no speech code. [Wispr Flow](https://wisprflow.ai) types into a plai
 ## What it does
 
 - **Ledger:** spending, income, cash, money lent or borrowed, and EMIs, dictated or imported. A cash withdrawal is a transfer, so ₹10,000 withdrawn and paid out counts once. Nothing you dictate is saved until you confirm it; imports are saved straight away, and you can undo any row.
-- **Panchayat:** a heavy expense convenes the goals it affects. Code finds up to 3 plans, each goal argues in its own Gemini call, and your spoken ruling changes the dates. Rulings can carry conditions, and they're remembered as precedent.
+- **Home:** the app opens on one question and one box. Say what happened or ask anything, and bubbles lead to every section.
+- **Huddle:** a heavy expense convenes the goals it affects. Code finds up to 3 plans, each goal argues in its own Gemini call, and your spoken ruling changes the dates. Rulings can carry conditions, and they're remembered as precedent.
 - **Buggy:** a chat assistant on every screen. Ask about spending, lending, borrowing, EMIs, cash or goals, and Gemini answers from your file; a reply using a figure that isn't in the file is rejected. It re-bases an iPhone goal on Apple India's list price, and it won't name securities.
 - **Home figures explain themselves:** hover or press and hold any number on Home to see why it's that value.
-- **Imports and alerts:** paste SMS, upload CSV or PDF. Corrections become visible rules. "Import next month" shows recurring-payment alerts, drift nudges and a monthly review.
+- **Imports and nudges:** paste SMS, upload CSV or PDF. Corrections become visible rules. "Import next month" shows recurring-payment nudges, drift nudges and a monthly review.
 
 ## Run it
 
@@ -40,7 +41,7 @@ Try saying these in the text box:
 1. `Laptop died, new one is 70 thousand, need it this month`, then confirm, then rule with `Goa moves to June, and if the bonus is under 50 thousand, July`
 2. `ATM se 10 hazaar nikale, 5 hazaar plumber ko, Rohit ko 2000 udhar diye, EMI bhi kat gayi 8400`
 3. `Mera iPhone wala plan kitna pahuncha, kitna percent bacha hai, aur price badha kya`
-4. `Rahul ko jo jaata hai woh rent hai`, then "Import next month" under Alerts
+4. `Rahul ko jo jaata hai woh rent hai`, then "Import next month" under Nudges
 5. `kaunsa mutual fund lun`
 
 To test imports, use the files in `seed/samples/` (`statement-locked.pdf` has the password `demo1234`).
@@ -57,6 +58,7 @@ Run the tests with `npm test`.
 | Bank data | **Synthetic.** No real person, account or transaction |
 | Next month | **Simulated** from `seed/next-month.json`, and labelled on screen |
 | SMS and email | Pasted or uploaded, not fetched live. Android SMS or Account Aggregator would be the production route |
+| Sign-in | **Prototype.** A name kept on the device, with no password or server account |
 | What-ifs | Simulations only. A ruling on a what-if is noted and moves no money |
 
 ## Limits
@@ -65,4 +67,4 @@ Run the tests with `npm test`.
 - A plausible wrong amount can only be caught by the person reading the confirm card.
 - The guardrail's lists are finite, so it can miss an unusual fund name.
 - It educates and models scenarios. It isn't financial, tax or investment advice, and it isn't a Chartered Accountant.
-- It's a local, single-user prototype with no sign-in.
+- It's a local, single-user prototype with no real accounts.

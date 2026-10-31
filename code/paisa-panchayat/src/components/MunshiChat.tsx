@@ -17,7 +17,7 @@ const QUESTIONS = [
   { emoji: "📱", text: "Mera iPhone wala plan kitna pahuncha, aur price badha kya?" },
 ];
 
-function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState }) {
+export function Answer({ entry, state }: { entry: MunshiEntry; state: TAppState }) {
   const { question, res } = entry;
   const refused = res.intent === "refused";
   const goal = res.price ? state.goals.find((g) => g.id === res.price!.goalId) : undefined;
