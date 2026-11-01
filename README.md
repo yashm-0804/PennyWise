@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="code/paisa-panchayat/public/logo.png" alt="PennyWise logo" width="120">
+  <img src="code/pennywise/public/logo.png" alt="PennyWise logo" width="120">
 </p>
 
 <h1 align="center">PennyWise</h1>
@@ -77,7 +77,7 @@ You need **Node 26 or newer**, because the database uses the built-in `node:sqli
 ```bash
 # 1. Get the code
 git clone https://github.com/yashm-0804/PennyWise.git
-cd PennyWise/code/paisa-panchayat
+cd PennyWise/code/pennywise
 
 # 2. Install
 npm install
@@ -147,11 +147,11 @@ Start from a fresh **Reset demo** so the numbers match.
 | `Rahul ko jo jaata hai woh rent hai` | Creates a visible rule. "Import next month" under Nudges then applies it unasked. |
 | `kaunsa mutual fund lun` | It refuses to name a security and offers a modelled scenario instead. |
 
-To test imports, tap **+** on Home or go to Nudges, then use the files in [`seed/samples/`](code/paisa-panchayat/seed/samples). The password for `statement-locked.pdf` is `demo1234`. The SMS sample includes OTPs and promotions, which are skipped on purpose and counted as "couldn't be read".
+To test imports, tap **+** on Home or go to Nudges, then use the files in [`seed/samples/`](code/pennywise/seed/samples). The password for `statement-locked.pdf` is `demo1234`. The SMS sample includes OTPs and promotions, which are skipped on purpose and counted as "couldn't be read".
 
 ## Commands
 
-Run these from `code/paisa-panchayat`.
+Run these from `code/pennywise`.
 
 | Command | What it does |
 |---|---|
@@ -214,7 +214,7 @@ The main design rule: **the AI never produces a number.**
 ## Project structure
 
 ```text
-code/paisa-panchayat/
+code/pennywise/
 ├── src/
 │   ├── agents/       Router, goal voices, ruling parser, validator
 │   ├── app/          Pages (/ and /phone) and API routes
@@ -233,13 +233,11 @@ docs/
 └── screenshots/      Images in this README
 ```
 
-The project's working title was Paisa Panchayat, and the code still uses some of the original Hindi names:
+Two internal names differ from what's on screen:
 
 | On screen | In the code |
 |---|---|
-| Ledger | `khata` |
 | Huddle | `panchayat` |
-| Buggy | `munshi` |
 | Nudges | `notices` |
 
 ## Troubleshooting
