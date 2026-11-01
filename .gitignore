@@ -23,3 +23,6 @@ yarn-debug.log*
 
 # Data (local SQLite)
 data/
+
+# Hackathon working notes, kept locally and out of the repo
+archive/

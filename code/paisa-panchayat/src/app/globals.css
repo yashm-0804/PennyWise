@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Glass panels over black, from the Payoneer mobile concept references, with the pink accent from dribbble.com-DESIGN.md. The page is black: .glass and .sheet flip these tokens to dark on light, so one set of component rules works on both. */
+/* Glass panels over black, from the Payoneer mobile concept references, with one pink accent. The page is black: .glass and .sheet flip these tokens to dark on light, so one set of component rules works on both. */
 @property --glow { syntax: "<number>"; inherits: true; initial-value: 0.5; }
 :root {
   --accent: #ea4c89;

@@ -1,6 +1,6 @@
 import type { TFactSheet, TPanchayat } from "@/contract/schemas";
 
-/** Verbatim from research/user-dictation-2026-10-31.md. */
+/** A real dictated ramble, kept verbatim. */
 export const IPHONE_SENTENCE = "मैंने last month एक iPhone लेने का plan करा था and मुझे उसकी progress जाननी है कि मेरी उसमें क्या progress है, मैंने उसमें कितना budget इकट्ठा कर लिया है, कितने percentage of budget मेरा अभी भी इकट्ठा करना बाकी है, and whether the price of that iPhone has been hired or not,";
 export const DEMO_LINE = "ATM se 10 hazaar nikale, 5 hazaar plumber ko, Rohit ko 2000 udhar diye, EMI bhi kat gayi 8400";
 export const CTX = { goals: ["Emergency Fund", "Flat", "Goa", "iPhone 17"], people: ["Rohit", "Amit"], simMonth: "2026-10" };
